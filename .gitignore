@@ -2,3 +2,14 @@
 .Rhistory
 .RData
 .Ruserdata
+*.cpg
+*.html
+*.xml
+*.prj
+*.sbn
+*.sbx
+*.shx
+*.ini
+*.aprix
+Index
+.backups
