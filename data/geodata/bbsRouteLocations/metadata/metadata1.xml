@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <idinfo>
+    <descript>
+      <abstract>This map layer portrays the current routes used for conducting Breeding Bird Surveys in the lower 48 States.</abstract>
+      <purpose>The digital data sets are used to create electronic and hard copy maps of the Breeding Bird Survey routes.&amp;#160; The data can be used to conduct geographic analysis on national and large regional scales.&amp;#160; The data should be displayed and analyzed at scales appropriate for 1:100,000-scale data.&amp;#160; No responsibility is assumed by the National Atlas of the United States or by USGS Patuxent Wildlife Research Center in the use of these data.</purpose>
+      <supplinf>For a description of the Breeding Bird Survey methods see Robbins, C.S. and W.T. Van Velzen; 1967; The Breeding Bird Survey, 1966; USDOIMigratory Bird Populations Station, Special Scientific Report--Wildlife No. 102; Washington, DC. ArcInfo and ArcView are products of Environmental Systems Research Institute, Inc. (ESRI), 380 New York Street, Redlands, CA 92373. Reference to ESRI products is for information purposes only and does not constitute endorsement by the U.S. Geological Survey. This map layer was collected using a different roads file from that available through the National Atlas of the United States, so there may be positional differences between the two map layers.</supplinf>
+    </descript>
+    <useconst>Use Constraints: None. Acknowledgment of the National Atlas of the United States of America and (or) the U.S. Geological Survey Patuxent Wildlife Research Center would be appreciated in products derived from these data.</useconst>
+    <datacred />
+    <citation>
+      <citeinfo>
+        <title>Breeding Bird Survey Route Locations for Lower 48 States</title>
+        <pubdate />
+        <othercit>Online linkage: &amp;lt;http://nationalatlas.gov/atlasftp.html?openChapters=chpbio#chpbio&amp;gt;</othercit>
+        <origin>USGS Patuxent Wildlife Research Center</origin>
+        <onlink>http://app.databasin.org/app/pages/datasetPage.jsp?id=02fe0ebbb1b04111b0ba1579b89b7420</onlink>
+        <pubinfo>
+          <publish />
+          <pubplace />
+        </pubinfo>
+      </citeinfo>
+    </citation>
+    <ptcontac>
+      <cntinfo>
+        <cntperp>
+          <cntper>Jane Fallon (Jane_Fallon@usgs.gov)</cntper>
+          <cntorg>Point_of_Contact:
+&amp;#160;&amp;#160;&amp;#160; Contact_Information:
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Person_Primary:
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Person: Jane E. Fallon
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Organization: USGS Patuxent Wildlife Research Center
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Address:
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Address_Type: Mailing address
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Address: 11410 American Holly Drive
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; City: Laurel
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; State_or_Province: MD
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Postal_Code: 20708-4015
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Voice_Telephone: 301-497-5664
+&amp;#160;&amp;#160;&amp;#160;&amp;#160;&amp;#160; Contact_Electronic_Mail_Address: Jane_Fallon@usgs.gov</cntorg>
+        </cntperp>
+      </cntinfo>
+    </ptcontac>
+    <status>
+      <progress />
+      <update />
+    </status>
+    <timeperd>
+      <timeinfo>
+        <sngdate>1966 to 1998</sngdate>
+        <current />
+      </timeinfo>
+    </timeperd>
+    <keywords>
+      <theme>
+        <themekey>bird survey</themekey>
+        <themekey>occurrences</themekey>
+        <themekey>BBS</themekey>
+        <themekey>route coverage</themekey>
+        <themekey>bird counts</themekey>
+        <themekey>bird lists</themekey>
+        <themekt>Data Basin tags</themekt>
+      </theme>
+    </keywords>
+    <spdom>
+      <bounding>
+        <northbc>50.00398580950737</northbc>
+        <eastbc>-64.44251686888823</eastbc>
+        <southbc>23.173439675544795</southbc>
+        <westbc>-127.53157973850946</westbc>
+      </bounding>
+    </spdom>
+  </idinfo>
+  <dataqual>
+    <attracc>
+      <attraccr />
+    </attracc>
+    <complete>Logical_Consistency_Report: ArcInfo software was used to create and maintain topological relationships between features. The ArcInfo command BUILD was run to ensure the topological consistency of the map layer. Each route was checked for missing and dangling arcs, correct length, proper direction, and correct route measures. Completeness_Report: This map layer contains the Breeding Bird Survey Routes in the lower 48 States which were considered active in 1998. This includes many of the routes added in 1998, though not all of them. The discontinued Breeding Bird Survey routes were generally not digitized. Positional_Accuracy: Horizontal_Positional_Accuracy: Horizontal_Positional_Accuracy_Report: Horizontal positional accuracy was tested by visual comparison of electronic maps to the source materials. For a few routes, we verified positions using GPS. If the route did not start at an intersection, the starting point may be slightly off. Portions of the route are sometimes skipped because of traffic noise or overlap with other routes. These skipped portions are usually not indicated. The maps we used did not always indicate the exact ending points of the routes, so in many cases the ending points are estimated and the routes digitized are longer then the actual route run. Occasionally portions of the roads on which Surveys were conducted were not contained on the digital road files we used. For these cases the road locations were very roughly estimated.</complete>
+    <lineage />
+  </dataqual>
+  <eainfo>
+    <detailed>
+      <attr>
+        <attrlabl>FID</attrlabl>
+        <attalias>FID</attalias>
+        <attrdef />
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>Shape</attrlabl>
+        <attalias>Shape</attalias>
+        <attrdef />
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>FNODE_</attrlabl>
+        <attalias>FNODE_</attalias>
+        <attrdef>Internal sequence number of the from-node.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>TNODE_</attrlabl>
+        <attalias>TNODE_</attalias>
+        <attrdef>Internal sequence number of the to-node.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>LPOLY_</attrlabl>
+        <attalias>LPOLY_</attalias>
+        <attrdef>Internal sequence number of the left polygon.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>RPOLY_</attrlabl>
+        <attalias>RPOLY_</attalias>
+        <attrdef>Internal sequence number of the right polygon.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>LENGTH</attrlabl>
+        <attalias>LENGTH</attalias>
+        <attrdef>Length in coverage units.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>BBSRTSL020</attrlabl>
+        <attalias>BBSRTSL020</attalias>
+        <attrdef>Internal feature number.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>ARC_LENGTH</attrlabl>
+        <attalias>ARC_LENGTH</attalias>
+        <attrdef>The length of the arc in meters.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>RTENO</attrlabl>
+        <attalias>RTENO</attalias>
+        <attrdef>The route number consists of the 1- or 2-digit State ID code followed by the 3-digit route ID.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>RTENAME</attrlabl>
+        <attalias>RTENAME</attalias>
+        <attrdef>The official name of the BBS route.</attrdef>
+        <attrdomv />
+      </attr>
+      <attr>
+        <attrlabl>RTELENG</attrlabl>
+        <attalias>RTELENG</attalias>
+        <attrdef>The length of the route in meters.</attrdef>
+        <attrdomv />
+      </attr>
+    </detailed>
+  </eainfo>
+  <distinfo>
+    <distrib>
+      <cntinfo>
+        <cntorgp>
+          <cntorg>Data Basin</cntorg>
+          <cntper>Data Basin Administrator</cntper>
+        </cntorgp>
+        <cntaddr>
+          <addrtype>physical address</addrtype>
+          <address>136 SW Washington Ave, Suite 202</address>
+          <city>Corvallis</city>
+          <state>OR</state>
+          <postal>97333</postal>
+          <country>USA</country>
+        </cntaddr>
+        <cntvoice>541-757-0687</cntvoice>
+        <cntemail>databasin_admin@consbio.org</cntemail>
+      </cntinfo>
+    </distrib>
+    <resdesc>Breeding Bird Survey Route Locations for Lower 48 States</resdesc>
+    <distliab>No warranty is made by Data Basin for use of this dataset.  No warranty is made by Data Basin regarding the accuracy, reliability, or completeness of this dataset. In no event shall Data Basin have any liability whatsoever for payment of any consequential, incidental, indirect, special, or tort damages of any kind, including, but not limited to, any loss of profits arising out of the use or reliance on the geographic or attribute data contained within this dataset or arising out of the delivery, installation, operation, or support by Data Basin.</distliab>
+    <stdorder>
+      <digform>
+        <digtinfo>
+          <formname>Feature Layer</formname>
+          <formvern>ArcGIS  10</formvern>
+          <formspec>Feature Layer</formspec>
+          <filedec>No compression applied</filedec>
+        </digtinfo>
+        <digtopt>
+          <onlinopt>
+            <computer>
+              <networka>
+                <networkr>http://app.databasin.org/app/pages/datasetPage.jsp?id=02fe0ebbb1b04111b0ba1579b89b7420</networkr>
+              </networka>
+            </computer>
+            <accinstr>Download from http://databasin.org</accinstr>
+          </onlinopt>
+        </digtopt>
+      </digform>
+      <fees>None</fees>
+      <ordering>Download from http://databasin.org</ordering>
+    </stdorder>
+    <techpreq>ESRI ArcGIS Desktop and supporting operating systems.</techpreq>
+  </distinfo>
+</metadata>
+

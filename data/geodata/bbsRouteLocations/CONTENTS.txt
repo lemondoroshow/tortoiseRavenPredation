@@ -1,0 +1,35 @@
+# Dataset Title
+Breeding Bird Survey Route Locations for Lower 48 States
+
+
+# URL
+http://databasin.org/datasets/02fe0ebbb1b04111b0ba1579b89b7420
+
+
+# Dataset Type
+ArcGIS
+
+
+# Credits
+USGS Patuxent Wildlife Research Center
+
+
+# Uploaded By
+[Conservation Biology Institute](http://databasin.org/people/consbio)
+
+
+# Description
+This map layer portrays the current routes used for conducting Breeding Bird Surveys in the lower 48 States.
+
+
+# Use Constraints
+Use Constraints:    None.  Acknowledgment of the National Atlas of the United States of America and (or) the U.S. Geological Survey Patuxent Wildlife Research Center would be appreciated in products derived from these data.
+
+
+### Original Metadata
+metadata/metadata1_original.xml
+
+
+### Data Basin Metadata
+metadata/metadata1.xml
+
