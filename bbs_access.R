@@ -5,12 +5,20 @@ library(sf)
 # Load BBS data
 bbs <- grab_bbs_data()
 
-# Load route data
+# Load Mojave routes
 mojave_routes <- read.csv("./data/bbsRoutesMojave.csv")
-bbs_rte <- bbs$routes |>
-  mutate(RTENO_MJV = paste0(StateNum, Route)) |>
-  filter(RTENO_MJV %in% mojave_routes$RTENO)
 
-# Filter BBS data for routes in Mojave
+# Get common raven AOU
+spec <- bbs$species_list |>
+  filter(Scientific_Name == "Corvus corax")
+aou_cc <- spec$AOU
+
+# Filter BBS data for common ravens in the Mojave
 bbs_obs_mojave <- bbs$observations |>
-  filter(Route %in% bbs_rte$Route)
+  mutate(RouteNum = paste0(StateNum, Route)) |>
+  filter(RouteNum %in% mojave_routes$RTENO) |>
+  filter(AOU == aou_cc) |>
+  select(Year, RouteNum) |>
+  arrange(Year)
+
+
