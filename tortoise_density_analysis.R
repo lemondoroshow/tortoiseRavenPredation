@@ -36,14 +36,15 @@ fit <- lm(y ~ df$year)
 # Isolate fit
 b <- fit$coefficients[1]
 m <- fit$coefficients[2]
-line = data.frame(df$year, df$year * m + b)
+line = data.frame(year = df$year, y = df$year * m + b)
 
 # Plot fit
 colors = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600", "Fit" = "black")
-ggplot(df, aes(x = year)) +
+wm_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = FK, color = "FK")) +
   geom_point(aes(y = SC, color = "SC")) +
   geom_point(aes(y = OR, color = "OR")) +
+  geom_line(aes(y = y, color = "Fit"), data = line) +
   scale_color_manual(values = colors, name  = "TCA") +
   theme(panel.background = element_rect(fill = "white"),
         panel.grid.major = element_line(color = "grey"),
@@ -52,3 +53,4 @@ ggplot(df, aes(x = year)) +
   xlab("Year") +
   ylab("Log-density (tortoises / km-sqared)") + 
   ggtitle("Western Mojave tortoise log-densities")
+ggsave("./plots/tortoiseDensities/western_mojave_fit.png", wm_fit_plot)
