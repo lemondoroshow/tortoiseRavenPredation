@@ -28,3 +28,27 @@ wm_plot <- ggplot(df, aes(x = year)) +
   ylab("Log-density (tortoises / km-sqared)") + 
   ggtitle("Western Mojave tortoise log-densities")
 ggsave("./plots/tortoiseDensities/western_mojave.png", wm_plot)
+
+# Average WM densities
+y = (df$FK + df$SC + df$OR) * 1 / 3
+fit <- lm(y ~ df$year)
+
+# Isolate fit
+b <- fit$coefficients[1]
+m <- fit$coefficients[2]
+line = data.frame(df$year, df$year * m + b)
+
+# Plot fit
+colors = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600", "Fit" = "black")
+ggplot(df, aes(x = year)) +
+  geom_point(aes(y = FK, color = "FK")) +
+  geom_point(aes(y = SC, color = "SC")) +
+  geom_point(aes(y = OR, color = "OR")) +
+  scale_color_manual(values = colors, name  = "TCA") +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey"),
+        panel.grid.minor = element_line(color = "grey"),
+        legend.title = element_text(face = "bold")) +
+  xlab("Year") +
+  ylab("Log-density (tortoises / km-sqared)") + 
+  ggtitle("Western Mojave tortoise log-densities")
