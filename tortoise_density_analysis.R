@@ -186,3 +186,55 @@ ggsave("./plots/tortoiseDensities/northeastern_mojave_fit.png", nm_fit_plot)
 
 # Clean up
 rm(list=setdiff(ls(), "df"))
+
+library(nlme)
+years <- df$year - 2000
+
+# Create GLS dataframe for NM
+nm_df <- data.frame(
+  y = df$GB,
+  time = df$year - 2000,
+  stratum = 1
+) |> rbind(data.frame(
+  y = df$MM,
+  time = df$year - 2000,
+  stratum = 2
+)) |> rbind(data.frame(
+  y = df$BD,
+  time = df$year - 2000,
+  stratum = 3
+))|> rbind(data.frame(
+  y = df$CS,
+  time = df$year - 2000,
+  stratum = 4
+)) |> 
+  group_by(time) |>
+  arrange(.by_group = TRUE)
+
+# Fit model
+nm_gls <- gls(y ~ time + stratum + time * stratum,
+              data = nm_df, na.action = na.omit)
+
+# Extract fit
+nm_gls_res <- data.frame(
+  year = df$year,
+  y = nm_gls$coefficients[1] +
+      nm_gls$coefficients[2] * years +
+      nm_gls$coefficients[3] * (1 + 2 + 3 + 4) / 4 + # Population-averaged stratum effect
+      nm_gls$coefficients[4] * (1 + 2 + 3 + 4) / 4 * years
+)
+
+nm_fit_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", "BD" = "#bc5090", "Fit" = "black")
+ggplot(df, aes(x = year)) +
+  geom_point(aes(y = CS, color = "CS")) +
+  geom_point(aes(y = MM, color = "MM")) +
+  geom_point(aes(y = GB, color = "GB")) +
+  geom_point(aes(y = BD, color = "BD")) +
+  geom_line(aes(y = y, color = "Fit"), data = nm_gls_res) +
+  scale_color_manual(values = nm_fit_colors, name = "TCA") +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey"),
+        panel.grid.minor = element_line(color = "grey")) + 
+  xlab("Year") +
+  ylab("Log-density (tortoises / km-squared") + 
+  ggtitle("Northeastern Mojave tortoise log-densities")
