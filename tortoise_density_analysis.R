@@ -183,3 +183,66 @@ nm_fit_plot <- ggplot(df, aes(x = year)) +
   ylab("Log-density (tortoises / km-squared") + 
   ggtitle("Northeastern Mojave tortoise log-densities")
 ggsave("./plots/tortoiseDensities/northeastern_mojave_fit.png", nm_fit_plot)
+
+# Clean up
+rm(list=setdiff(ls(), "df"))
+
+# Import GEE
+library(gee)
+
+# Create GEE dataframe for WM
+nm_gee_df <- data.frame(
+  y = df$GB,
+  time = df$year - 2000,
+  stratum = 1
+) |> rbind(data.frame(
+  y = df$MM,
+  time = df$year - 2000,
+  stratum = 2
+)) |> rbind(data.frame(
+  y = df$BD,
+  time = df$year - 2000,
+  stratum = 3
+))|> rbind(data.frame(
+  y = df$CS,
+  time = df$year - 2000,
+  stratum = 4
+)) |> 
+  group_by(time) |>
+  arrange(.by_group = TRUE)
+
+# Fit GEE model
+nm_gee <- gee(
+  y ~ stratum + time + stratum * time,
+  data = nm_gee_df,
+  id = time
+)
+
+# Extract fit
+years <- df$year - 2000
+df_narm <- df
+df_narm[is.na(df_narm)] <- 0
+nm_gee_res <- data.frame(
+  year = df$year,
+  y = nm_gee$coefficients[1] +
+      nm_gee$coefficients[2] * (1 + 2 + 3 + 4) * 1/4 + 
+      nm_gee$coefficients[3] * years +
+      nm_gee$coefficients[4] * (1 + 2 + 3 + 4) * 1/4 * years
+)
+nm_fit_colors <- c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600", "Fit" = "black")
+nm_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", "BD" = "#bc5090", "Fit" = "black")
+ggplot(df, aes(x = year)) +
+  geom_point(aes(y = CS, color = "CS")) +
+  geom_point(aes(y = MM, color = "MM")) +
+  geom_point(aes(y = GB, color = "GB")) +
+  geom_point(aes(y = BD, color = "BD")) +
+  geom_line(aes(y = y, color = "Fit"), data = nm_gee_res) +
+  scale_color_manual(values = nm_colors, name = "TCA") +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(color = "grey"),
+        panel.grid.minor = element_line(color = "grey")) + 
+  xlab("Year") +
+  ylab("Log-density (tortoises / km-squared") + 
+  ggtitle("Northeastern Mojave tortoise log-densities")
+
+# I'm not sure if this is how GEE works, but this seems accurate? More research is *certainly* needed
