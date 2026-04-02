@@ -60,9 +60,9 @@ gls_wm_res <- data.frame(
 wm_fit_colors <- c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600", ".OLS Fit" = "#994F00",
                    ".GLS Fit" = "#006CD1")
 wm_fit_plot <- ggplot(df, aes(x = year)) +
-  geom_point(aes(y = FK, color = "FK")) +
-  geom_point(aes(y = SC, color = "SC")) +
-  geom_point(aes(y = OR, color = "OR")) +
+  geom_point(aes(y = FK, color = "FK"), shape = 16) +
+  geom_point(aes(y = SC, color = "SC"), shape = 17) +
+  geom_point(aes(y = OR, color = "OR"), shape = 18) +
   geom_line(aes(y = y, color = ".OLS Fit"), data = ols_wm_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_wm_res) +
   scale_color_manual(values = wm_fit_colors, name  = "TCA") +
@@ -136,13 +136,13 @@ cd_fit_colors <- c("PV" = "#003f5c", "FE" = "#374c80", "CM" = "#7a5195", "PT" = 
                    "JT" = "#ef5675", "CK" = "#ff764a", "AG" = "#ffa600", ".OLS Fit" = "#994F00", 
                    ".GLS Fit" = "#006CD1")
 cd_fit_plot <- ggplot(df, aes(x = year)) +
-  geom_point(aes(y = PV, color = "PV")) +
-  geom_point(aes(y = FE, color = "FE")) +
-  geom_point(aes(y = CM, color = "CM")) +
-  geom_point(aes(y = PT, color = "PT")) +
-  geom_point(aes(y = JT, color = "JT")) +
-  geom_point(aes(y = CK, color = "CK")) +
-  geom_point(aes(y = AG, color = "AG")) +
+  geom_point(aes(y = PV, color = "PV"), shape = 16) +
+  geom_point(aes(y = FE, color = "FE"), shape = 17) +
+  geom_point(aes(y = CM, color = "CM"), shape = 18) +
+  geom_point(aes(y = PT, color = "PT"), shape = 4) +
+  geom_point(aes(y = JT, color = "JT"), shape = 3) +
+  geom_point(aes(y = CK, color = "CK"), shape = 15) +
+  geom_point(aes(y = AG, color = "AG"), shape = 8) +
   geom_line(aes(y = y, color = ".OLS Fit"), data = ols_cd_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_cd_res) +
   scale_color_manual(values = cd_fit_colors, name  = "TCA") +
@@ -194,8 +194,8 @@ gls_em_res <- data.frame(
 # Plot fits
 em_fit_colors <- c("EV" = "#003f5c", "IV" = "#bc5090", ".OLS Fit" = "#994F00", ".GLS Fit" = "#006CD1")
 em_fit_plot <- ggplot(df, aes(x = year)) +
-  geom_point(aes(y = EV, color = "EV")) +
-  geom_point(aes(y = IV, color = "IV")) +
+  geom_point(aes(y = EV, color = "EV"), shape = 16) +
+  geom_point(aes(y = IV, color = "IV"), shape = 17) +
   geom_line(aes(y = y, color = ".OLS Fit"), data = ols_em_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_em_res) +
   scale_color_manual(values = em_fit_colors, name  = "TCA") +
@@ -256,10 +256,10 @@ gls_nm_res <- data.frame(
 nm_fit_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", "BD" = "#bc5090", 
                    ".OLS Fit" = "#994F00", ".GLS Fit" = "#006CD1")
 nm_fit_plot <- ggplot(df, aes(x = year)) +
-  geom_point(aes(y = CS, color = "CS")) +
-  geom_point(aes(y = MM, color = "MM")) +
-  geom_point(aes(y = GB, color = "GB")) +
-  geom_point(aes(y = BD, color = "BD")) +
+  geom_point(aes(y = CS, color = "CS"), shape = 16) +
+  geom_point(aes(y = MM, color = "MM"), shape = 17) +
+  geom_point(aes(y = GB, color = "GB"), shape = 18) +
+  geom_point(aes(y = BD, color = "BD"), shape = 4) +
   geom_line(aes(y = y, color = ".OLS Fit"), data = ols_nm_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_nm_res) +
   scale_color_manual(values = nm_fit_colors, name  = "TCA") +
