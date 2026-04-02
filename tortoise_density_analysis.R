@@ -7,7 +7,7 @@ df <- read.csv("./data/tortoise_densities.csv")
 years <- df$year - 2000
 
 # Log-transform densities
-df[2:dim(df)[2]] <- lapply(df[2:dim(df)[2]], log)
+# df[2:dim(df)[2]] <- lapply(df[2:dim(df)[2]], log)
 
 # Define RUs and TCAs, for my own reference
 western_mojave <- c("FK", "SC", "OR")
@@ -70,9 +70,9 @@ wm_fit_plot <- ggplot(df, aes(x = year)) +
         panel.grid.major = element_line(color = "grey"),
         panel.grid.minor = element_line(color = "grey")) +
   xlab("Year") +
-  ylab("Log-density (tortoises / km-sqared)") + 
-  ggtitle("Western Mojave tortoise log-densities")
-ggsave("./plots/tortoiseDensities/western_mojave_fit.png", wm_fit_plot)
+  ylab("Density (tortoises / km-sqared)") + 
+  ggtitle("Western Mojave tortoise densities")
+ggsave("./plots/tortoiseDensities/western_mojave_fit_nolog.png", wm_fit_plot)
 
 ## Colorado Desert
 
@@ -150,9 +150,9 @@ cd_fit_plot <- ggplot(df, aes(x = year)) +
         panel.grid.major = element_line(color = "grey"),
         panel.grid.minor = element_line(color = "grey")) +
   xlab("Year") +
-  ylab("Log-density (tortoises / km-sqared)") + 
-  ggtitle("Colorado Desert tortoise log-densities")
-ggsave("./plots/tortoiseDensities/colorado_desert_fit.png", cd_fit_plot)
+  ylab("Density (tortoises / km-sqared)") + 
+  ggtitle("Colorado Desert tortoise densities")
+ggsave("./plots/tortoiseDensities/colorado_desert_fit_nolog.png", cd_fit_plot)
 
 ## Eastern Mojave
 
@@ -203,9 +203,9 @@ em_fit_plot <- ggplot(df, aes(x = year)) +
         panel.grid.major = element_line(color = "grey"),
         panel.grid.minor = element_line(color = "grey")) +
   xlab("Year") +
-  ylab("Log-density (tortoises / km-sqared)") + 
-  ggtitle("Eastern Mojave tortoise log-densities")
-ggsave("./plots/tortoiseDensities/eastern_mojave_fit.png", em_fit_plot)
+  ylab("Density (tortoises / km-sqared)") + 
+  ggtitle("Eastern Mojave tortoise densities")
+ggsave("./plots/tortoiseDensities/eastern_mojave_fit_nolog.png", em_fit_plot)
 
 ## Northeastern Mojave
 
@@ -267,9 +267,9 @@ nm_fit_plot <- ggplot(df, aes(x = year)) +
         panel.grid.major = element_line(color = "grey"),
         panel.grid.minor = element_line(color = "grey")) +
   xlab("Year") +
-  ylab("Log-density (tortoises / km-sqared)") + 
-  ggtitle("Northeastern Mojave tortoise log-densities")
-ggsave("./plots/tortoiseDensities/northeastern_mojave_fit.png", nm_fit_plot)
+  ylab("Density (tortoises / km-sqared)") + 
+  ggtitle("Northeastern Mojave tortoise densities")
+ggsave("./plots/tortoiseDensities/northeastern_mojave_fit_nolog.png", nm_fit_plot)
 
 # Clean up
 rm(list=setdiff(ls(), "df"))
