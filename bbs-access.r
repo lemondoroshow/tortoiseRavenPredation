@@ -63,27 +63,30 @@ for (i in 1:dim(obs_freq)[1]) {
 obs_freq$count <- counts
 obs_freq$x <- xs
 obs_freq$y <- ys
-obs_freq$name <- names
+obs_freq$name <- names |>
+  lapply(function(x) gsub(" ", "\n", x))
 
 # Create spatial data
 obs_freq_sf <- st_as_sf(obs_freq, coords = c("x", "y"))
+mojave_routes_sf <- st_as_sf(mojave_routes, coords = c("x", "y"))
 st_crs(obs_freq_sf) <- "WGS84"
+st_crs(mojave_routes_sf) <- "WGS84"
 
 # Create bounding box
 bbox <- st_bbox(obs_freq_sf)
 x_range <- bbox$xmax - bbox$xmin
 y_range <- bbox$ymax - bbox$ymin
-bbox[1] <- bbox[1] - 0.25 * x_range
-bbox[3] <- bbox[3] + 0.25 * x_range
-bbox[2] <- bbox[2] - 0.25 * y_range
-bbox[4] <- bbox[4] + 0.25 * y_range
+bbox[1] <- bbox[1] - 0.05 * x_range
+bbox[3] <- bbox[3] + 0.05 * x_range
+bbox[2] <- bbox[2] - 0.05 * y_range
+bbox[4] <- bbox[4] + 0.05 * y_range
 bbox <- st_as_sfc(bbox)
 st_crs(bbox) <- "WGS84"
 
 # Map data
-#tm_shape(World, bbox = st_bbox(obs_freq_sf) * 1.1) +
-corvax_map<- tm_shape(obs_freq_sf, bbox = bbox) +
-  tm_symbols(size = "count", size.scale = tm_scale_continuous(values.range=c(0.1, 3)), fill = "purple") +
-  tm_basemap("OpenStreetMap") +
+corax_map <- tm_shape(obs_freq_sf, bbox = bbox) +
+  tm_symbols(fill = "count", size = 0.9) +
+  tm_text("name", size = 0.45, options = opt_tm_text(point.label = TRUE)) +
+  tm_basemap("CartoDB.PositronNoLabels") +
   tm_title("C. corax counts for the Mojave, 1968 - Present")
-tmap_save(corvax_map, "./plots/corvax_count_map.png")
+tmap_save(corax_map, "./plots/corax_count_map_labels.png")
