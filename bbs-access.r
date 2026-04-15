@@ -29,16 +29,37 @@ bbs_obs_mojave <- read.csv("./data/bbs/States/Arizona.csv") |>
 
 # Calculate frequencies per route, total span
 obs_freq <- data.frame(route = unique(bbs_obs_mojave$RouteNum))
-counts = c()
+counts <- c()
+xs <- c()
+ys <- c()
+names <- c()
 for (i in 1:dim(obs_freq)[1]) {
-  counts = c(
+  counts <- c(
     counts,
     (bbs_obs_mojave |>
       filter(RouteNum == obs_freq$route[i]) |>
-      unique() |>
       dim())[1]
   )
+
+  # NOTE -- Barstow and Inyokern are repeated in name, but not in coordinates
+  # This WILL need to be fixed / figured out later, but for this high-level analysis
+  # I'm not as worried
+  xs <- c(
+    xs,
+    subset(mojave_routes, RTENO == obs_freq$route[i])$x[1]
+  )
+  ys <- c(
+    ys, 
+    subset(mojave_routes, RTENO == obs_freq$route[i])$y[1]
+  )
+  names <- c(
+    names,
+    subset(mojave_routes, RTENO == obs_freq$route[i])$RTENAME[1]
+  )
 }
-obs_freq$count = counts # This only results in 
-# > sum(obs_freq$count) = 885
-# TODO: Figure out why it isn't length of bbs_obs_mojave? (888)
+
+# Add data to data frame
+obs_freq$count <- counts
+obs_freq$x <- xs
+obs_freq$y <- ys
+obs_freq$name <- names
