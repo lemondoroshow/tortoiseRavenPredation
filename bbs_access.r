@@ -24,6 +24,7 @@ bbs_obs_mojave <- read.csv("./data/bbs/States/Arizona.csv") |>
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) |>
   filter(RouteNum %in% mojave_routes$RTENO) |>
   filter(AOU == aou_cc) |>
+  filter(Year >= 2001) |>
   select(Year, RouteNum, SpeciesTotal) |>
   arrange(Year) |>
   mutate(x = route_xs[RouteNum], y = route_ys[RouteNum])
@@ -53,5 +54,5 @@ st_crs(bbox) <- "WGS84"
 corax_map <- tm_shape(obs_freq_sf, bbox = bbox) +
   tm_symbols(size = "count", size.scale = tm_scale_continuous(values.range = c(0.1, 3)), fill = "purple") +
   tm_basemap("OpenStreetMap") +
-  tm_title("C. corax counts for the Mojave, 1968 - Present")
-tmap_save(corax_map, "./plots/corax_count_map.png")
+  tm_title("C. corax counts for the Mojave, 2001 - Present")
+tmap_save(corax_map, "./plots/corax_count_map_21cent.png")
