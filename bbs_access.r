@@ -24,69 +24,34 @@ bbs_obs_mojave <- read.csv("./data/bbs/States/Arizona.csv") |>
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) |>
   filter(RouteNum %in% mojave_routes$RTENO) |>
   filter(AOU == aou_cc) |>
-  select(Year, RouteNum) |>
+  select(Year, RouteNum, SpeciesTotal) |>
   arrange(Year) |>
   mutate(x = route_xs[RouteNum], y = route_ys[RouteNum])
 
 # Calculate frequencies per route, total span
-obs_freq <- data.frame(route = unique(bbs_obs_mojave$RouteNum))
-counts <- c()
-xs <- c()
-ys <- c()
-names <- c()
-for (i in 1:dim(obs_freq)[1]) {
-  counts <- c(
-    counts,
-    (bbs_obs_mojave |>
-      filter(RouteNum == obs_freq$route[i]) |>
-      dim())[1]
-  )
-
-  # NOTE -- Barstow and Inyokern are repeated in name, but not in coordinates
-  # This WILL need to be fixed / figured out later, but for this high-level analysis
-  # I'm not as worried
-  xs <- c(
-    xs,
-    subset(mojave_routes, RTENO == obs_freq$route[i])$x[1]
-  )
-  ys <- c(
-    ys, 
-    subset(mojave_routes, RTENO == obs_freq$route[i])$y[1]
-  )
-  names <- c(
-    names,
-    subset(mojave_routes, RTENO == obs_freq$route[i])$RTENAME[1]
-  )
-}
-
-# Add data to data frame
-obs_freq$count <- counts
-obs_freq$x <- xs
-obs_freq$y <- ys
-obs_freq$name <- names |>
-  lapply(function(x) gsub(" ", "\n", x))
+obs_freq <- bbs_obs_mojave |>
+  ungroup() |>
+  group_by(RouteNum) |>
+  summarise(count = sum(SpeciesTotal), x = mean(x), y = mean(y))
 
 # Create spatial data
 obs_freq_sf <- st_as_sf(obs_freq, coords = c("x", "y"))
-mojave_routes_sf <- st_as_sf(mojave_routes, coords = c("x", "y"))
 st_crs(obs_freq_sf) <- "WGS84"
-st_crs(mojave_routes_sf) <- "WGS84"
 
 # Create bounding box
 bbox <- st_bbox(obs_freq_sf)
 x_range <- bbox$xmax - bbox$xmin
 y_range <- bbox$ymax - bbox$ymin
-bbox[1] <- bbox[1] - 0.05 * x_range
-bbox[3] <- bbox[3] + 0.05 * x_range
-bbox[2] <- bbox[2] - 0.05 * y_range
-bbox[4] <- bbox[4] + 0.05 * y_range
+bbox[1] <- bbox[1] - 0.10 * x_range
+bbox[3] <- bbox[3] + 0.10 * x_range
+bbox[2] <- bbox[2] - 0.10 * y_range
+bbox[4] <- bbox[4] + 0.10 * y_range
 bbox <- st_as_sfc(bbox)
 st_crs(bbox) <- "WGS84"
 
 # Map data
 corax_map <- tm_shape(obs_freq_sf, bbox = bbox) +
-  tm_symbols(fill = "count", size = 0.9) +
-  tm_text("name", size = 0.45, options = opt_tm_text(point.label = TRUE)) +
-  tm_basemap("CartoDB.PositronNoLabels") +
+  tm_symbols(size = "count", size.scale = tm_scale_continuous(values.range = c(0.1, 3)), fill = "purple") +
+  tm_basemap("OpenStreetMap") +
   tm_title("C. corax counts for the Mojave, 1968 - Present")
-tmap_save(corax_map, "./plots/corax_count_map_labels.png")
+tmap_save(corax_map, "./plots/corax_count_map.png")
