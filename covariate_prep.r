@@ -45,7 +45,7 @@ roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
   tm_raster(col = "density", col.scale = tm_scale(values = "brewer.yl_or_br"),
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
-  tm_title("Road density in the Mojave Desert")
+  tm_title("Road density in the Mojave Desert, 2024")
 tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
 
 # Import transmission lines
