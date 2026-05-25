@@ -4,7 +4,8 @@ library(tidyterra)
 library(tmap)
 
 # Import Mojave shapefile
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp")
+mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+  project("WGS84")
 
 # Create bounding box for plots
 bbox <- st_bbox(mojave)
@@ -31,7 +32,7 @@ roads_mjv <- project(roads, mojave) |>
   crop(ext(mojave))
 
 # Create density raster
-roads_rast <- rast(ext(roads_mjv), res = 10000, crs = crs(roads_mjv))
+roads_rast <- rast(ext(roads_mjv), res = 0.1, crs = crs(roads_mjv))
 roads_area <- cellSize(roads_rast)
 roads_dens <- rasterizeGeom(roads_mjv, roads_rast, "length") / roads_area
 
@@ -54,10 +55,10 @@ lines <- vect(paste0("./data/shapefiles/transmissionLines/",
   project(mojave)
 
 # Create distance raster
-lines_rast <- rast(ext(mojave), res = 10000, crs = crs(mojave))
-lines_dist <- distance(lines_rast, lines) |>
+lines_rast <- rast(ext(mojave), res = 0.1, crs = crs(mojave))
+lines_dist <- distance(lines_rast, lines, rasterize = TRUE) |>
   mask(mojave) |>
-  tidyterra::rename(distance = lyr.1)
+  tidyterra::rename(distance = layer)
 
 # Map distance
 lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
