@@ -6,9 +6,8 @@ library(raster)
 library(FedData)
 library(sf)
 library(stars)
-
-# Load Mojave routes
-mojave_routes <- read.csv("./data/bbs_routes_mojave.csv")
+library(terra)
+library(tidyterra)
 
 # Get common raven AOU
 spec <- read.csv("./data/bbs/SpeciesList.csv") %>%
@@ -22,7 +21,7 @@ weather <- read.csv("./data/bbs/Weather.csv") |>
   mutate(julian = as.numeric(format(date, '%j')))
 
 # Import BBS data, and filter (we will use 2024 as an "example year")
-bbs_obs_mojave <- read.csv("./data/bbs/States/Arizona.csv") %>%
+bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") %>%
   bind_rows(read.csv("./data/bbs/States/Califor.csv")) %>%
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) %>%
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) %>%
@@ -30,13 +29,23 @@ bbs_obs_mojave <- read.csv("./data/bbs/States/Arizona.csv") %>%
             by = c('Route', 'CountryNum', 'StateNum')) %>%
   filter(Year == 2024) %>%
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) %>%
-  filter(RouteNum %in% mojave_routes$RTENO) %>%
   dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) %>%
   dplyr::select(-CountryNum) %>%
   complete(AOU, nesting(RouteDataID, Latitude, Longitude)) %>%
   replace(is.na(.), 0) %>%
   filter(AOU == aou_cc) %>%
   left_join(weather, by = c("RouteDataID"))
+
+# Isolate BBS data in area of interest
+mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+  project("WGS84")
+bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
+                       crs = crs(mojave)) |>
+  mask(mojave) |>
+  as.data.frame(geom = "XY") |>
+  rename(Longitude = x, Latitude = y) |>
+  relocate(Latitude, .after = RouteDataID) |>
+  relocate(Longitude, .after = Latitude)
 
 # Create detection-nondetection matrix
 y <- as.matrix(bbs_obs_mojave[, c('Count10', 'Count20', 'Count30', 'Count40', 'Count50')])
