@@ -4,6 +4,9 @@ library(tidyterra)
 library(tidyverse)
 library(tmap)
 
+# Set year of interest
+yoi = 2024
+
 # Import Mojave shapefile
 mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
   project("WGS84")
@@ -19,9 +22,9 @@ bbox[4] <- bbox[4] + 0.10 * y_range
 bbox <- st_as_sfc(bbox)
 st_crs(bbox) <- crs(mojave)
 
-# Import all roads for 2024
-files <- list.files("./data/shapefiles/roads/2024", pattern = "*.shp$",
-                    recursive = TRUE, full.names = TRUE)
+# Import all roads for year of interest
+files <- list.files(paste0("./data/shapefiles/roads/", as.character(yoi)), 
+                    pattern = "*.shp$", recursive = TRUE, full.names = TRUE)
 roads <- vect()
 for (file in files) {
   print(file)
@@ -47,7 +50,7 @@ roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
   tm_raster(col = "density", col.scale = tm_scale(values = "brewer.yl_or_br"),
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
-  tm_title("Road density in the Mojave Desert, 2024")
+  tm_title(paste0("Road density in the Mojave Desert, ", as.character(yoi)))
 # tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
 
 # Import transmission lines
@@ -100,3 +103,30 @@ obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
   dplyr::select(Latitude, Longitude, date, Year.x) |>
   dplyr::rename(Year = Year.x, Date = date)
 write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
+  
+# Transform dates
+dates <- (filter(obs_dates, Year == yoi))$Date |>
+  lapply(format, format = "%Y%m%d") |>
+  unlist() |>
+  sort()
+
+# Import all NDVI data
+files <- list.files("./data/ndvi/raw/", pattern = as.character(yoi), full.names = TRUE)
+for (file in files) {
+  
+  # Transform date
+  date <- unlist(strsplit(file, "_"))[5]
+  date <- as.Date(date, format = "%Y%m%d")
+  
+  # Import data; mask, crop
+  ndvi <- rast(file) |>
+    terra::subset("NDVI") |>
+    project(mojave) |>
+    mask(mojave) |>
+    crop(mojave)
+  
+  # Export data
+  writeRaster(ndvi, paste0("./data/ndvi/processed/", format(date), ".tif"),
+              overwrite = TRUE)
+
+}
