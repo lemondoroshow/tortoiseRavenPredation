@@ -1,3 +1,5 @@
 examples/*
 .Rproj.user
 .positai
+.RData
+.Rhistory
