@@ -97,5 +97,6 @@ obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
   mask(mojave) |>
   as.data.frame(geom = "XY") |>
   rename(Longitude = x, Latitude = y) |>
-  dplyr::select(Latitude, Longitude, date)
+  dplyr::select(Latitude, Longitude, date, Year.x) |>
+  dplyr::rename(Year = Year.x, Date = date)
 write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
