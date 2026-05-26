@@ -1,6 +1,7 @@
 library(sf)
 library(terra)
 library(tidyterra)
+library(tidyverse)
 library(tmap)
 
 # Import Mojave shapefile
@@ -24,7 +25,7 @@ files <- list.files("./data/shapefiles/roads/2024", pattern = "*.shp$",
 roads <- vect()
 for (file in files) {
   print(file)
-  roads <- union(roads, vect(file) |> project(mojave))
+  roads <- terra::union(roads, vect(file) |> project(mojave))
 }
 
 # Crop to an expanded Mojave box
@@ -47,7 +48,7 @@ roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
   tm_title("Road density in the Mojave Desert, 2024")
-tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
+# tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
 
 # Import transmission lines
 lines <- vect(paste0("./data/shapefiles/transmissionLines/",
@@ -66,7 +67,7 @@ lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
   tm_title("Distance from nearest transmission line in the Mojave Desert")
-tmap_save(lines_dist_map, "./plots/mojave_transmission_line_distance.png")
+# tmap_save(lines_dist_map, "./plots/mojave_transmission_line_distance.png")
 
 # Get common raven AOU
 spec <- read.csv("./data/bbs/SpeciesList.csv") |>
@@ -78,18 +79,17 @@ weather <- read.csv("./data/bbs/Weather.csv") |>
   unite('date', sep = '-', Year, Month, Day, remove = FALSE) |>
   mutate(date = as.Date(date, tz = "America/New_York"))
 
-# Import BBS data, and filter (we will use 2024 as an "example year")
+# Import BBS data, and filter
 bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
   left_join(read.csv("./data/bbs/Routes.csv"), 
             by = c('Route', 'CountryNum', 'StateNum')) |>
-  filter(Year == 2024) |>
   filter(AOU == aou_cc) |>
   left_join(weather, by = c("RouteDataID"))
 
-# Isolate BBS data in area of interest
+# Isolate BBS data in area of interest; get dates of observations
 mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
   project("WGS84")
 obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
@@ -98,3 +98,4 @@ obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
   as.data.frame(geom = "XY") |>
   rename(Longitude = x, Latitude = y) |>
   dplyr::select(Latitude, Longitude, date)
+write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
