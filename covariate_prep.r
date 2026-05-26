@@ -4,6 +4,8 @@ library(tidyterra)
 library(tidyverse)
 library(tmap)
 
+#### Preparation ####
+
 # Set year of interest
 yoi = 2024
 
@@ -21,6 +23,49 @@ bbox[3] <- bbox[3] + 0.10 * x_range
 bbox[4] <- bbox[4] + 0.10 * y_range
 bbox <- st_as_sfc(bbox)
 st_crs(bbox) <- crs(mojave)
+
+# Get common raven AOU
+spec <- read.csv("./data/bbs/SpeciesList.csv") |>
+  filter(English_Common_Name == "Common Raven")
+aou_cc <- spec$AOU
+
+# Import weather data
+weather <- read.csv("./data/bbs/Weather.csv") |>
+  unite('date', sep = '-', Year, Month, Day, remove = FALSE) |>
+  mutate(date = as.Date(date, tz = "America/New_York"))
+
+# Import BBS data, and filter
+bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
+  bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
+  bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
+  bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
+  left_join(read.csv("./data/bbs/Routes.csv"), 
+            by = c('Route', 'CountryNum', 'StateNum')) |>
+  filter(AOU == aou_cc) |>
+  left_join(weather, by = c("RouteDataID"))
+
+# Isolate BBS data in area of interest; get dates of observations
+mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+  project("WGS84")
+obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
+                  crs = crs(mojave)) |>
+  mask(mojave) |>
+  as.data.frame(geom = "XY") |>
+  rename(Longitude = x, Latitude = y) |>
+  dplyr::select(Latitude, Longitude, date, Year.x) |>
+  dplyr::rename(Year = Year.x, Date = date)
+write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
+
+# Transform dates
+dates <- (filter(obs_dates, Year == yoi))$Date |>
+  lapply(format, format = "%Y%m%d") |>
+  unlist() |>
+  sort()
+
+# Clean up
+rm(bbs_obs, spec, weather, x_range, y_range)
+
+#### Roads ####
 
 # Import all roads for year of interest
 files <- list.files(paste0("./data/shapefiles/roads/", as.character(yoi)), 
@@ -53,6 +98,8 @@ roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
   tm_title(paste0("Road density in the Mojave Desert, ", as.character(yoi)))
 # tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
 
+#### Transmission lines ####
+
 # Import transmission lines
 lines <- vect(paste0("./data/shapefiles/transmissionLines/",
                      "Electric_Power_Transmission_Lines_A.shp")) |>
@@ -72,43 +119,7 @@ lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
   tm_title("Distance from nearest transmission line in the Mojave Desert")
 # tmap_save(lines_dist_map, "./plots/mojave_transmission_line_distance.png")
 
-# Get common raven AOU
-spec <- read.csv("./data/bbs/SpeciesList.csv") |>
-  filter(English_Common_Name == "Common Raven")
-aou_cc <- spec$AOU
-
-# Import weather data
-weather <- read.csv("./data/bbs/Weather.csv") |>
-  unite('date', sep = '-', Year, Month, Day, remove = FALSE) |>
-  mutate(date = as.Date(date, tz = "America/New_York"))
-
-# Import BBS data, and filter
-bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
-  bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
-  bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
-  bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
-  left_join(read.csv("./data/bbs/Routes.csv"), 
-            by = c('Route', 'CountryNum', 'StateNum')) |>
-  filter(AOU == aou_cc) |>
-  left_join(weather, by = c("RouteDataID"))
-
-# Isolate BBS data in area of interest; get dates of observations
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
-  project("WGS84")
-obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
-                       crs = crs(mojave)) |>
-  mask(mojave) |>
-  as.data.frame(geom = "XY") |>
-  rename(Longitude = x, Latitude = y) |>
-  dplyr::select(Latitude, Longitude, date, Year.x) |>
-  dplyr::rename(Year = Year.x, Date = date)
-write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
-  
-# Transform dates
-dates <- (filter(obs_dates, Year == yoi))$Date |>
-  lapply(format, format = "%Y%m%d") |>
-  unlist() |>
-  sort()
+#### NDVI ####
 
 # Import all NDVI data
 files <- list.files("./data/ndvi/raw/", pattern = as.character(yoi), full.names = TRUE)
