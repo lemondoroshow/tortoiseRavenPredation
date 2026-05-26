@@ -4,3 +4,4 @@ examples/*
 .RData
 .Rhistory
 data/ndvi/raw
+data/impervious/raw
