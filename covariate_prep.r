@@ -31,7 +31,7 @@ aou_cc <- spec$AOU
 
 # Import weather data
 weather <- read.csv("./data/bbs/Weather.csv") |>
-  unite('date', sep = '-', Year, Month, Day, remove = FALSE) |>
+  unite("date", sep = "-", Year, Month, Day, remove = FALSE) |>
   mutate(date = as.Date(date, tz = "America/New_York"))
 
 # Import BBS data, and filter
@@ -40,7 +40,7 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
   left_join(read.csv("./data/bbs/Routes.csv"), 
-            by = c('Route', 'CountryNum', 'StateNum')) |>
+            by = c("Route", "CountryNum", "StateNum")) |>
   filter(AOU == aou_cc) |>
   left_join(weather, by = c("RouteDataID"))
 
@@ -90,6 +90,9 @@ roads_dens_mjv <- mask(roads_dens, mojave) |>
   crop(mojave) |>
   tidyterra::rename(density = length)
 
+# Export raster
+writeRaster(roads_dens_mjv, paste0("./data/roads/", as.character(yoi), ".tif"))
+
 # Map density
 roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
   tm_raster(col = "density", col.scale = tm_scale(values = "brewer.yl_or_br"),
@@ -110,6 +113,9 @@ lines_rast <- rast(ext(mojave), res = 0.1, crs = crs(mojave))
 lines_dist <- distance(lines_rast, lines, rasterize = TRUE) |>
   mask(mojave) |>
   tidyterra::rename(distance = layer)
+
+# Export raster
+writeRaster(lines_dist, "./data/transmissionLines/all_time.tif")
 
 # Map distance
 lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
