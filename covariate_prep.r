@@ -147,3 +147,21 @@ for (file in files) {
               overwrite = TRUE)
 
 }
+
+#### % Impervious ####
+
+# Import all % impervious files
+files <- list.files("./data/impervious/raw/", pattern = as.character(yoi), full.names = TRUE)
+for (file in files) {
+  
+  # Import data; mask, crop
+  impervious <- rast(file) |>
+    aggregate(10) |> # I'd love to keep the original resolution, but it's too big
+    project(mojave) |>
+    mask(mojave) |>
+    crop(mojave)
+    
+  # Export raster
+  writeRaster(impervious, paste0("./data/impervious/processed/",
+                                 as.character(yoi), ".tif"))
+}
