@@ -1,3 +1,4 @@
+library(elevatr)
 library(sf)
 library(terra)
 library(tidyterra)
@@ -165,3 +166,17 @@ for (file in files) {
   writeRaster(impervious, paste0("./data/impervious/processed/",
                                  as.character(yoi), ".tif"))
 }
+
+#### Elevation ####
+
+# Create template raster for downloading data
+rast_template <- rasterize(mojave, rast(crs = crs(mojave), 
+                                        ext = ext(mojave), res = 0.01))
+
+# Access data
+elev <- rast(get_elev_raster(locations = rast_template, z = 10))
+
+# Morph for Mojave
+elev_mjv <- project(elev, mojave) |>
+  mask(mojave) |>
+  crop(mojave)
