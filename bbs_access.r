@@ -63,11 +63,7 @@ det_covs <- list(
 )
 
 # Compile coordinates
-coords <- bbs_obs_mojave[, c("Latitude", "Longitude")]
-coords_sp <- data.frame(coords, val = apply(y, 1, max)) %>%
-  arrange(Longitude, Latitude)
-coordinates(coords_sp) <- ~Longitude + Latitude
-proj4string(coords_sp) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+coords <- bbs_obs_mojave[, c("Longitude", "Latitude")]
 
 # Extract NDVIs
 ndvis <- c()
@@ -77,10 +73,8 @@ for (row in 1:dim(bbs_obs_mojave)[1]) {
   date <- format(bbs_obs_mojave$date[row])
   ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
   
-  # Get NDVI at coords
-  coords <- matrix(nrow = 1, ncol = 2)
-  coords[1,] <- c(bbs_obs_mojave$Longitude[row], bbs_obs_mojave$Latitude[row])
-  ndvi_ext <- terra::extract(ndvi, coords)
+  # Get NDVI at coords=
+  ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
   ndvis <- c(ndvis, ndvi_ext)
 }
 
@@ -89,22 +83,20 @@ bbs_obs_mojave$NDVI <- ndvis
 
 # Extract elevations, add to data frame
 elev <- rast("./data/elevation/all_time.tif")
-coords <- matrix(c(bbs_obs_mojave$Longitude, bbs_obs_mojave$Latitude), 
-                 nrow = dim(bbs_obs_mojave)[1], ncol = 2)
 elev_ext <- terra::extract(elev, coords)
-bbs_obs_mojave$Elevation <- unlist(elev_ext)
+bbs_obs_mojave$Elevation <- unlist(elev_ext[,2])
 
 # Extract road density, add to data frame
 roads <- rast(paste0("./data/roads/", as.character(yoi), ".tif"))
 roads_ext <- terra::extract(roads, coords)
-bbs_obs_mojave$RoadDensity <- unlist(roads_ext)
+bbs_obs_mojave$RoadDensity <- unlist(roads_ext[,2])
 
 # Extract transmission line distance, add to data frame
 lines <- rast("./data/transmissionLines/all_time.tif")
 lines_ext <- terra::extract(lines, coords)
-bbs_obs_mojave$TransmissionLineDistance <- unlist(lines_ext)
+bbs_obs_mojave$TransmissionLineDistance <- unlist(lines_ext[,2])
 
 # Extract % impervious, add to data frame
 impervious <- rast(paste0("./data/impervious/processed/", as.character(yoi), ".tif"))
 impervious_ext <- terra::extract(impervious, coords)
-bbs_obs_mojave$PercentImpervious <- unlist(impervious_ext)
+bbs_obs_mojave$PercentImpervious <- unlist(impervious_ext[,2])
