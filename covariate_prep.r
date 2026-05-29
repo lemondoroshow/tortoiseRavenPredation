@@ -180,3 +180,6 @@ elev <- rast(get_elev_raster(locations = rast_template, z = 10))
 elev_mjv <- project(elev, mojave) |>
   mask(mojave) |>
   crop(mojave)
+
+# Export
+writeRaster(elev_mjv, "./data/elevation/all_time.tif")
