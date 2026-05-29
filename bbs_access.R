@@ -23,14 +23,14 @@ weather <- read.csv("./data/bbs/Weather.csv") |>
   mutate(date = as.Date(date, tz = "America/New_York")) %>%
   mutate(julian = as.numeric(format(date, "%j")))
 
-# Import BBS data, and filter (we will use 2024 as an "example year")
+# Import BBS data
 bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") %>%
   bind_rows(read.csv("./data/bbs/States/Califor.csv")) %>%
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) %>%
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) %>%
   left_join(read.csv("./data/bbs/Routes.csv"), 
             by = c("Route", "CountryNum", "StateNum")) %>%
-  filter(Year == 2024) %>%
+  filter(Year == yoi) %>%
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) %>%
   dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) %>%
   dplyr::select(-CountryNum) %>%
