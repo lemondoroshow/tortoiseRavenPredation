@@ -9,6 +9,9 @@ library(stars)
 library(terra)
 library(tidyterra)
 
+# Define year of interest
+yoi = 2024
+
 # Get common raven AOU
 spec <- read.csv("./data/bbs/SpeciesList.csv") %>%
   filter(English_Common_Name == "Common Raven")
@@ -16,9 +19,9 @@ aou_cc <- spec$AOU
 
 # Import weather data
 weather <- read.csv("./data/bbs/Weather.csv") |>
-  unite('date', sep = '-', Year, Month, Day, remove = FALSE) %>%
+  unite("date", sep = "-", Year, Month, Day, remove = FALSE) %>%
   mutate(date = as.Date(date, tz = "America/New_York")) %>%
-  mutate(julian = as.numeric(format(date, '%j')))
+  mutate(julian = as.numeric(format(date, "%j")))
 
 # Import BBS data, and filter (we will use 2024 as an "example year")
 bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") %>%
@@ -26,7 +29,7 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") %>%
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) %>%
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) %>%
   left_join(read.csv("./data/bbs/Routes.csv"), 
-            by = c('Route', 'CountryNum', 'StateNum')) %>%
+            by = c("Route", "CountryNum", "StateNum")) %>%
   filter(Year == 2024) %>%
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) %>%
   dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) %>%
@@ -48,7 +51,7 @@ bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
   relocate(Longitude, .after = Latitude)
 
 # Create detection-nondetection matrix
-y <- as.matrix(bbs_obs_mojave[, c('Count10', 'Count20', 'Count30', 'Count40', 'Count50')])
+y <- as.matrix(bbs_obs_mojave[, c("Count10", "Count20", "Count30", "Count40", "Count50")])
 y <- ifelse(y > 0, 1, 0)
 
 # Compile detection covariates
@@ -60,8 +63,48 @@ det_covs <- list(
 )
 
 # Compile coordinates
-coords <- bbs_obs_mojave[, c('Latitude', 'Longitude')]
+coords <- bbs_obs_mojave[, c("Latitude", "Longitude")]
 coords_sp <- data.frame(coords, val = apply(y, 1, max)) %>%
   arrange(Longitude, Latitude)
 coordinates(coords_sp) <- ~Longitude + Latitude
-proj4string(coords_sp) <- '+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0'
+proj4string(coords_sp) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+# Extract NDVIs
+ndvis <- c()
+for (row in 1:dim(bbs_obs_mojave)[1]) {
+  
+  # Import NDVI data
+  date <- format(bbs_obs_mojave$date[row])
+  ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
+  
+  # Get NDVI at coords
+  coords <- matrix(nrow = 1, ncol = 2)
+  coords[1,] <- c(bbs_obs_mojave$Longitude[row], bbs_obs_mojave$Latitude[row])
+  ndvi_ext <- terra::extract(ndvi, coords)
+  ndvis <- c(ndvis, ndvi_ext)
+}
+
+# Add NDVIs to data frame
+bbs_obs_mojave$NDVI <- ndvis
+
+# Extract elevations, add to data frame
+elev <- rast("./data/elevation/all_time.tif")
+coords <- matrix(c(bbs_obs_mojave$Longitude, bbs_obs_mojave$Latitude), 
+                 nrow = dim(bbs_obs_mojave)[1], ncol = 2)
+elev_ext <- terra::extract(elev, coords)
+bbs_obs_mojave$Elevation <- unlist(elev_ext)
+
+# Extract road density, add to data frame
+roads <- rast(paste0("./data/roads/", as.character(yoi), ".tif"))
+roads_ext <- terra::extract(roads, coords)
+bbs_obs_mojave$RoadDensity <- unlist(roads_ext)
+
+# Extract transmission line distance, add to data frame
+lines <- rast("./data/transmissionLines/all_time.tif")
+lines_ext <- terra::extract(lines, coords)
+bbs_obs_mojave$TransmissionLineDistance <- unlist(lines_ext)
+
+# Extract % impervious, add to data frame
+impervious <- rast(paste0("./data/impervious/processed/", as.character(yoi), ".tif"))
+impervious_ext <- terra::extract(impervious, coords)
+bbs_obs_mojave$PercentImpervious <- unlist(impervious_ext)
