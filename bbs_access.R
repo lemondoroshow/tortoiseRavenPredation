@@ -51,7 +51,8 @@ bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
   relocate(Longitude, .after = Latitude)
 
 # Create detection-nondetection matrix
-y <- as.matrix(bbs_obs_mojave[, c("Count10", "Count20", "Count30", "Count40", "Count50")])
+y <- as.matrix(bbs_obs_mojave[, c("Count10", "Count20", "Count30", 
+                                  "Count40", "Count50")])
 y <- ifelse(y > 0, 1, 0)
 
 # Compile detection covariates
@@ -97,6 +98,39 @@ lines_ext <- terra::extract(lines, coords)
 bbs_obs_mojave$TransmissionLineDistance <- unlist(lines_ext[,2])
 
 # Extract % impervious, add to data frame
-impervious <- rast(paste0("./data/impervious/processed/", as.character(yoi), ".tif"))
+impervious <- rast(paste0("./data/impervious/processed/", 
+                          as.character(yoi), ".tif"))
 impervious_ext <- terra::extract(impervious, coords)
 bbs_obs_mojave$PercentImpervious <- unlist(impervious_ext[,2])
+
+# Compile all variables
+all_vars <- data.frame(day = det_covs$day, 
+                       day.2 = det_covs$day.2, 
+                       tod = det_covs$tod, 
+                       obs = det_covs$obs, 
+                       y, 
+                       coords) |>
+  arrange(Longitude, Latitude)
+all_covs <- arrange(bbs_obs_mojave, Longitude, Latitude)
+
+# Put y in the same order
+tmp <- data.frame(y, coords) |>
+  arrange(Longitude, Latitude)
+y <- as.matrix(tmp[, c("Count10", "Count20", "Count30", "Count40", "Count50")])
+
+# Get ordered variables into lists
+det_covs <- list(day = all_vars$day, 
+                 day.2 = all_vars$day.2, 
+                 tod = all_vars$tod, 
+                 obs = all_vars$obs)
+coords <- as.matrix(all_vars[, c("Longitude", "Latitude")])
+occ_covs <- data.frame(elevation = c(scale(all_covs$Elevation)), 
+                       ndvi = c(scale(all_covs$NDVI)),
+                       impervious = c(scale(all_covs$PercentImpervious)),
+                       roads = c(scale(all_covs$RoadDensity)),
+                       lines = c(scale(all_covs$TransmissionLineDistance)))
+
+# Bundle and save data
+bbs_data <- list(y = y, det_covs = det_covs, 
+                 occ_covs = occ_covs, coords = coords)
+save(bbs_data, file = "./data/bbs_and_cov_data_bundle.R")
