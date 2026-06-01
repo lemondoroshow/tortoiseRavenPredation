@@ -10,33 +10,33 @@ library(terra)
 library(tidyterra)
 
 # Define year of interest
-yoi = 2024
+yoi <- 2024
 
 # Get common raven AOU
-spec <- read.csv("./data/bbs/SpeciesList.csv") %>%
+spec <- read.csv("./data/bbs/SpeciesList.csv") |>
   filter(English_Common_Name == "Common Raven")
 aou_cc <- spec$AOU
 
 # Import weather data
 weather <- read.csv("./data/bbs/Weather.csv") |>
-  unite("date", sep = "-", Year, Month, Day, remove = FALSE) %>%
-  mutate(date = as.Date(date, tz = "America/New_York")) %>%
+  unite("date", sep = "-", Year, Month, Day, remove = FALSE) |>
+  mutate(date = as.Date(date, tz = "America/New_York")) |>
   mutate(julian = as.numeric(format(date, "%j")))
 
 # Import BBS data
-bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") %>%
-  bind_rows(read.csv("./data/bbs/States/Califor.csv")) %>%
-  bind_rows(read.csv("./data/bbs/States/Nevada.csv")) %>%
-  bind_rows(read.csv("./data/bbs/States/Utah.csv")) %>%
+bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
+  bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
+  bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
+  bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
   left_join(read.csv("./data/bbs/Routes.csv"), 
-            by = c("Route", "CountryNum", "StateNum")) %>%
-  filter(Year == yoi) %>%
-  mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) %>%
-  dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) %>%
-  dplyr::select(-CountryNum) %>%
+            by = c("Route", "CountryNum", "StateNum")) |>
+  filter(Year == yoi) |>
+  mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) |>
+  dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) |>
+  dplyr::select(-CountryNum) |>
   complete(AOU, nesting(RouteDataID, Latitude, Longitude)) %>%
-  replace(is.na(.), 0) %>%
-  filter(AOU == aou_cc) %>%
+  replace(is.na(.), 0) |> # magrittr pipe on line 37 allows for this format
+  filter(AOU == aou_cc) |>
   left_join(weather, by = c("RouteDataID"))
 
 # Isolate BBS data in area of interest
@@ -74,7 +74,7 @@ for (row in 1:dim(bbs_obs_mojave)[1]) {
   date <- format(bbs_obs_mojave$date[row])
   ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
   
-  # Get NDVI at coords=
+  # Get NDVI at coords
   ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
   ndvis <- c(ndvis, ndvi_ext)
 }
