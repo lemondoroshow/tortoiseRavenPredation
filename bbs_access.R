@@ -131,6 +131,6 @@ occ_covs <- data.frame(elevation = c(scale(all_covs$Elevation)),
                        lines = c(scale(all_covs$TransmissionLineDistance)))
 
 # Bundle and save data
-bbs_data <- list(y = y, det_covs = det_covs, 
-                 occ_covs = occ_covs, coords = coords)
+bbs_data <- list(y = y, det.covs = det_covs, 
+                 occ.covs = occ_covs, coords = coords)
 save(bbs_data, file = "./data/bbs_and_cov_data_bundle.R")
