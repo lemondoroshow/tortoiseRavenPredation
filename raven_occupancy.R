@@ -1,7 +1,10 @@
 rm(list = ls())
 library(coda)
+library(dplyr)
 library(sf)
 library(spOccupancy)
+library(terra)
+library(tmap)
 
 # Import data
 load("./data/bbs_and_cov_data_bundle.R")
@@ -72,3 +75,66 @@ out <- spPGOcc(occ.formula = occ.formula,
                n.report = n.report)
 save(out, file = paste("runs/bbs_spPGOcc_", chain, "_", 
                        Sys.time(), ".R", sep = ''))
+
+# Get points in Mojave to predict at
+mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+  project("EPSG:5070")
+mojave_points <- rast(ext(mojave), res = 7500, crs = crs(mojave))
+
+# Open and resample covariates
+ndvi <- rast("./data/ndvi/processed/2024-05-30.tif") |> # Random date
+  project("EPSG:5070") |>
+  resample(mojave_points)
+elev <- rast("./data/elevation/all_time.tif") |>
+  project("EPSG:5070") |>
+  resample(mojave_points)
+roads <- rast("./data/roads/2024.tif") |>
+  project("EPSG:5070") |>
+  resample(mojave_points)
+lines <- rast("./data/transmissionLines/all_time.tif") |>
+  project("EPSG:5070") |>
+  resample(mojave_points)
+impervious <- rast("./data/impervious/processed/2024.tif") |>
+  project("EPSG:5070") |>
+  resample(mojave_points)
+
+# Put covariates together
+covs <- as.data.frame(elev, xy = TRUE) |>
+  left_join(
+    as.data.frame(ndvi, xy = TRUE),
+    by = c("x", "y")
+  ) |> left_join(
+    as.data.frame(impervious, xy = TRUE),
+    by = c("x", "y")
+  ) |> left_join(
+    as.data.frame(roads, xy = TRUE),
+    by = c("x", "y")
+  ) |> left_join(
+    as.data.frame(lines, xy = TRUE),
+    by = c("x", "y")
+  ) |>
+  na.omit()
+colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", "lines")
+n_locs <- dim(covs)[1]
+
+# Prepare covariate matrix
+covs$Intercept <- rep(1, n_locs)
+X.0 <- select(covs, -c("x", "y")) |>
+  as.matrix()
+
+# Prepare coordinate matrix
+coords.0 <- select(covs, c("x", "y")) |>
+  as.matrix()
+
+# Predict results
+res <- predict(out, X.0, coords.0)
+occ <- res$psi.0.samples |>
+  colMeans()
+occ_loc <- matrix(nrow = n_locs, ncol = 3)
+occ_loc[,1:2] <- coords.0
+occ_loc[,3] <- occ
+colnames(occ_loc) <- c("x", "y", "psi")
+
+# Create prediction raster
+occ_rast <- as.data.frame(occ_loc) |>
+  rast(crs = "EPSG:5070")
