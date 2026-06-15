@@ -3,5 +3,7 @@ examples/*
 .positai
 .RData
 .Rhistory
-data/ndvi/raw
-data/impervious/raw
+data/ndvi/raw/*
+data/impervious/raw/*
+data/shapefiles/RU/*
+data/shapefiles/TCA/*
