@@ -40,7 +40,7 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   left_join(weather, by = c("RouteDataID"))
 
 # Isolate BBS data in area of interest
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
   project("WGS84")
 bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
                        crs = crs(mojave)) |>
