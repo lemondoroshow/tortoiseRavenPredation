@@ -40,7 +40,7 @@ max.dist <- max(dist.bbs)
 inits <- list(alpha = rep(alpha.start, p.det),
               beta = rep(beta.start, p.occ),
               sigma.sq = sigma.sq.start, 
-              phi = phi.start, 
+              # phi = phi.start, 
               w = rep(w.start, nrow(bbs_data$y)),
               z = apply(bbs_data$y, 1, max, na.rm = TRUE))
 priors <- list(beta.normal = list(mean = rep(0, p.occ),
@@ -73,11 +73,11 @@ out <- spPGOcc(occ.formula = occ.formula,
                n.burn = n.burn,
                n.thin = n.thin,
                n.report = n.report)
-save(out, file = paste("runs/bbs_spPGOcc_", chain, "_", 
-                       Sys.time(), ".R", sep = ''))
+run_str <- paste0(chain, "_", Sys.time())
+save(out, file = paste("runs/bbs_spPGOcc_", run_str, ".R", sep = ''))
 
 # Get points in Mojave to predict at
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
   project("EPSG:5070")
 mojave_points <- rast(ext(mojave), res = 7500, crs = crs(mojave))
 
@@ -119,11 +119,11 @@ n_locs <- dim(covs)[1]
 
 # Prepare covariate matrix
 covs$Intercept <- rep(1, n_locs)
-X.0 <- select(covs, -c("x", "y")) |>
+X.0 <- dplyr::select(covs, -c("x", "y")) |>
   as.matrix()
 
 # Prepare coordinate matrix
-coords.0 <- select(covs, c("x", "y")) |>
+coords.0 <- dplyr::select(covs, c("x", "y")) |>
   as.matrix()
 
 # Predict results
@@ -138,3 +138,4 @@ colnames(occ_loc) <- c("x", "y", "psi")
 # Create prediction raster
 occ_rast <- as.data.frame(occ_loc) |>
   rast(crs = "EPSG:5070")
+writeRaster(occ_rast, paste0("./results/", run_str, ".tif"))
