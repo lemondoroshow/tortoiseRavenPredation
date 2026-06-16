@@ -8,10 +8,10 @@ library(tmap)
 #### Preparation ####
 
 # Set year of interest
-yoi = 2024
+yoi <- 2024
 
 # Import Mojave shapefile
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
   project("WGS84")
 
 # Create bounding box for plots
@@ -46,8 +46,6 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   left_join(weather, by = c("RouteDataID"))
 
 # Isolate BBS data in area of interest; get dates of observations
-mojave <- vect("./data/shapefiles/mojaveDesert/MojaveEcoregion_TNC_UTM83.shp") |>
-  project("WGS84")
 obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
                   crs = crs(mojave)) |>
   mask(mojave) |>
@@ -92,7 +90,8 @@ roads_dens_mjv <- mask(roads_dens, mojave) |>
   tidyterra::rename(density = length)
 
 # Export raster
-writeRaster(roads_dens_mjv, paste0("./data/roads/", as.character(yoi), ".tif"))
+writeRaster(roads_dens_mjv, paste0("./data/roads/", as.character(yoi), ".tif"),
+            overwrite = TRUE)
 
 # Map density
 roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
@@ -100,7 +99,7 @@ roads_dens_map <- tm_shape(roads_dens_mjv, bbox = bbox) +
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
   tm_title(paste0("Road density in the Mojave Desert, ", as.character(yoi)))
-# tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
+tmap_save(roads_dens_map, "./plots/mojave_road_density.png")
 
 #### Transmission lines ####
 
@@ -116,7 +115,8 @@ lines_dist <- distance(lines_rast, lines, rasterize = TRUE) |>
   tidyterra::rename(distance = layer)
 
 # Export raster
-writeRaster(lines_dist, "./data/transmissionLines/all_time.tif")
+writeRaster(lines_dist, "./data/transmissionLines/all_time.tif", 
+            overwrite = TRUE)
 
 # Map distance
 lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
@@ -124,7 +124,7 @@ lines_dist_map <- tm_shape(lines_dist, bbox = bbox) +
             col.legend = tm_legend(position = tm_pos_out("right", "center"))) +
   tm_basemap("Esri.WorldImagery") +
   tm_title("Distance from nearest transmission line in the Mojave Desert")
-# tmap_save(lines_dist_map, "./plots/mojave_transmission_line_distance.png")
+tmap_save(lines_dist_map, "./plots/mojave_transmission_line_distance.png")
 
 #### NDVI ####
 
@@ -164,7 +164,7 @@ for (file in files) {
     
   # Export raster
   writeRaster(impervious, paste0("./data/impervious/processed/",
-                                 as.character(yoi), ".tif"))
+                                 as.character(yoi), ".tif"), overwrite = TRUE)
 }
 
 #### Elevation ####
@@ -182,4 +182,4 @@ elev_mjv <- project(elev, mojave) |>
   crop(mojave)
 
 # Export
-writeRaster(elev_mjv, "./data/elevation/all_time.tif")
+writeRaster(elev_mjv, "./data/elevation/all_time.tif", overwrite = TRUE)
