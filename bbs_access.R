@@ -124,6 +124,28 @@ det_covs <- list(day = all_vars$day,
                  tod = all_vars$tod, 
                  obs = all_vars$obs)
 coords <- as.matrix(all_vars[, c("Longitude", "Latitude")])
+stats <- list(
+  elevation = c(
+    mean(all_covs$Elevation), 
+    sd(all_covs$Elevation)
+  ),
+  ndvi = c(
+    mean(all_covs$NDVI), 
+    sd(all_covs$NDVI)
+  ),
+  impervious = c(
+    mean(all_covs$PercentImpervious),
+    sd(all_covs$PercentImpervious)
+  ),
+  roads = c(
+    mean(all_covs$RoadDensity),
+    sd(all_covs$RoadDensity)
+  ),
+  lines = c(
+    mean(all_covs$TransmissionLineDistance),
+    sd(all_covs$TransmissionLineDistance)
+  )
+)
 occ_covs <- data.frame(elevation = c(scale(all_covs$Elevation)), 
                        ndvi = c(scale(all_covs$NDVI)),
                        impervious = c(scale(all_covs$PercentImpervious)),
@@ -131,6 +153,6 @@ occ_covs <- data.frame(elevation = c(scale(all_covs$Elevation)),
                        lines = c(scale(all_covs$TransmissionLineDistance)))
 
 # Bundle and save data
-bbs_data <- list(y = y, det.covs = det_covs, 
-                 occ.covs = occ_covs, coords = coords)
+bbs_data <- list(y = y, det.covs = det_covs, occ.covs = occ_covs, 
+                 coords = coords, stats = stats)
 save(bbs_data, file = "./data/bbs_and_cov_data_bundle.R")
