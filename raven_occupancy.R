@@ -85,23 +85,28 @@ mojave_points <- rast(ext(mojave), res = 7500, crs = crs(mojave))
 ndvi <- rast("./data/ndvi/processed/2024-05-30.tif") |> # Random date
   project("EPSG:5070") |>
   resample(mojave_points) |>
-  scale()
+  scale(center = bbs_data$stats$ndvi[1], 
+        scale = bbs_data$stats$ndvi[2])
 elev <- rast("./data/elevation/all_time.tif") |>
   project("EPSG:5070") |>
   resample(mojave_points) |>
-  scale()
+  scale(center = bbs_data$stats$elevation[1], 
+        scale = bbs_data$stats$elevation[2])
 roads <- rast("./data/roads/2024.tif") |>
   project("EPSG:5070") |>
   resample(mojave_points) |>
-  scale()
+  scale(center = bbs_data$stats$roads[1], 
+        scale = bbs_data$stats$roads[2])
 lines <- rast("./data/transmissionLines/all_time.tif") |>
   project("EPSG:5070") |>
   resample(mojave_points) |>
-  scale()
+  scale(center = bbs_data$stats$lines[1], 
+        scale = bbs_data$stats$lines[2])
 impervious <- rast("./data/impervious/processed/2024.tif") |>
   project("EPSG:5070") |>
   resample(mojave_points) |>
-  scale()
+  scale(center = bbs_data$stats$impervious[1], 
+        scale = bbs_data$stats$impervious[2])
 
 # Put covariates together
 covs <- as.data.frame(elev, xy = TRUE) |>
