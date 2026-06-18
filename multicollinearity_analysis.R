@@ -53,7 +53,7 @@ total_counts <- dplyr::select(bbs_obs_mojave, c(
   as.matrix() |>
   rowSums()
 data <- dplyr::select(bbs_obs_mojave, c(Latitude, Longitude, date)) |>
-  mutate(Counts = total_counts)
+  mutate(Counts = scale(total_counts))
 
 # Extract NDVIs
 ndvis <- c()
@@ -67,25 +67,40 @@ for (row in 1:dim(data)[1]) {
   ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
   ndvis <- c(ndvis, ndvi_ext)
 }
-data$NDVI <- ndvis
+data$NDVI <- ndvis |> scale()
 
 # Extract elevations, add to data frame
 elev <- rast("./data/elevation/all_time.tif")
 elev_ext <- terra::extract(elev, coords)
-data$Elevation <- unlist(elev_ext[,2])
+data$Elevation <- unlist(elev_ext[,2]) |>
+  scale()
 
 # Extract road density, add to data frame
 roads <- rast(paste0("./data/roads/", as.character(yoi), ".tif"))
 roads_ext <- terra::extract(roads, coords)
-data$RoadDensity <- unlist(roads_ext[,2])
+data$RoadDensity <- unlist(roads_ext[,2]) |>
+  scale()
 
 # Extract transmission line distance, add to data frame
 lines <- rast("./data/transmissionLines/all_time.tif")
 lines_ext <- terra::extract(lines, coords)
-data$TransmissionLineDistance <- unlist(lines_ext[,2])
+data$TransmissionLineDistance <- unlist(lines_ext[,2]) |>
+  scale()
 
 # Extract % impervious, add to data frame
 impervious <- rast(paste0("./data/impervious/processed/", 
                           as.character(yoi), ".tif"))
 impervious_ext <- terra::extract(impervious, coords)
-data$PercentImpervious <- unlist(impervious_ext[,2])
+data$PercentImpervious <- unlist(impervious_ext[,2]) |>
+  scale()
+
+#### Conduct analysis ####
+
+# Define basic model
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance + 
+              PercentImpervious, data = data)
+vif(model)
+# NDVI                Elevation              RoadDensity TransmissionLineDistance 
+# 1.992871                 1.956227                 1.565652                 1.942048 
+# PercentImpervious 
+# 1.239908 
