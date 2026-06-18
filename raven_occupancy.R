@@ -29,11 +29,10 @@ phi.start <- p_file[p_file[, 1] == 'phi', 2]
 w.start <- p_file[p_file[, 1] == 'w', 2]
 
 # Specify model
-occ.formula <- ~ elevation + ndvi + impervious + roads + lines + 
-                  impervious * roads + impervious * lines
+occ.formula <- ~ elevation + ndvi + impervious + roads + lines
 det.formula <- ~ day + day.2 + tod + (1 | obs)
 p.det <- length(bbs_data$det.covs)
-p.occ <- ncol(bbs_data$occ.covs) + 1 + 2 # covs + intercept + interactions
+p.occ <- ncol(bbs_data$occ.covs) + 1 # covs + intercept
 dist.bbs <- dist(bbs_data$coords)
 mean.dist <- mean(dist.bbs)
 min.dist <- min(dist.bbs)
@@ -118,16 +117,16 @@ covs <- as.data.frame(elev, xy = TRUE) |>
   ) |> left_join(
     as.data.frame(lines, xy = TRUE),
     by = c("x", "y")
-  ) |> left_join(
-    as.data.frame(impervious * roads, xy = TRUE),
-    by = c("x", "y")
-  ) |> left_join(
-    as.data.frame(lines * roads, xy = TRUE),
-    by = c("x", "y")
+  # ) |> left_join(
+  #   as.data.frame(impervious * roads, xy = TRUE),
+  #   by = c("x", "y")
+  # ) |> left_join(
+  #   as.data.frame(lines * roads, xy = TRUE),
+  #   by = c("x", "y")
   ) |>
   na.omit()
-colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", "lines",
-                    "impervious_x_roads", "lines_x_roads")
+colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", "lines")
+                    #"impervious_x_roads", "lines_x_roads")
 n_locs <- dim(covs)[1]
 
 # Prepare covariate matrix
