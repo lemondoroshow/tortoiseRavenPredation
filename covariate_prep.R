@@ -194,7 +194,7 @@ mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
 for (yoi in 2001:2024) {
   
   # Import all NDVI data
-  files <- list.files(paste0("./data/ndvi/raw/", as.character(yoi)), 
+  files <- list.files(paste0("./data/ndvi/raw/", as.character(yoi), "/"), 
                       full.names = TRUE)
   for (file in files) {
     
