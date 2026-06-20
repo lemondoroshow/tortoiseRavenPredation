@@ -183,3 +183,35 @@ elev_mjv <- project(elev, mojave) |>
 
 # Export
 writeRaster(elev_mjv, "./data/elevation/all_time.tif", overwrite = TRUE)
+
+#### NDVI -- all years ####
+
+# Import Mojave shapefile
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
+  project("WGS84")
+
+# Iterate through years
+for (yoi in 2001:2024) {
+  
+  # Import all NDVI data
+  files <- list.files(paste0("./data/ndvi/raw/", as.character(yoi)), 
+                      full.names = TRUE)
+  for (file in files) {
+    
+    # Transform date
+    date <- unlist(strsplit(file, "_"))[5]
+    date <- as.Date(date, format = "%Y%m%d")
+    
+    # Import data; mask, crop
+    ndvi <- rast(file) |>
+      terra::subset("NDVI") |>
+      project(mojave) |>
+      mask(mojave) |>
+      crop(mojave)
+    
+    # Export data
+    writeRaster(ndvi, paste0("./data/ndvi/processed/", format(date), ".tif"),
+                overwrite = TRUE)
+    
+  }
+}
