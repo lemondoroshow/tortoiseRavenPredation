@@ -12,6 +12,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
+def wait_for_download(dl_path):
+    wait = True
+    while wait:
+        time.sleep(1)
+        wait = False
+        for file in os.listdir(dl_path):
+            if file.endswith('.crdownload'):
+                wait = True
+
 # Get list of dates including and after 2001
 all_dates = pd.read_csv("data/bbs_obs_mojave.csv")
 dates = sorted([int(dt.strftime(dt.strptime(d, "%Y-%m-%d"), format = "%Y%m%d"))
@@ -19,8 +28,11 @@ dates = sorted([int(dt.strftime(dt.strptime(d, "%Y-%m-%d"), format = "%Y%m%d"))
 dates = set([d for d in dates if d >= 20010101])
 
 # Iterate through years
-links = []
-for year in range(2001, 2025):
+print("Enter start year: ")
+start = int(input())
+print("Enter end year: ")
+end = int(input()) + 1
+for year in range(start, end):
     doi = ["_" + str(d) + "_" for d in dates if 
            (d >= year * 10**4 and d < (year + 1) * 10**4)]
 
@@ -30,6 +42,7 @@ for year in range(2001, 2025):
     prefs = {"download.default_directory" : str(download_folder)}
     chr_options.add_experimental_option("prefs", prefs)
     chr_options.add_argument('--headless=new')
+    driver = webdriver.Chrome(options = chr_options)
 
     # Iterate through all dates of interest
     for date in doi:
@@ -38,7 +51,6 @@ for year in range(2001, 2025):
         print(date)
 
         # Reset driver
-        driver = webdriver.Chrome(options = chr_options)
         driver.get("https://noaa-cdr-ndvi-pds.s3.amazonaws.com/index.html#data/" + str(year) + "/")
         while len(driver.find_elements(By.ID, "dt-search-0")) == 0:
             WebDriverWait(1, timeout = 5)
@@ -53,6 +65,14 @@ for year in range(2001, 2025):
 
         # Get download link
         link = driver.find_element(By.XPATH, "/html/body/div/div/div/div/div[2]/div/div[2]/div/table/tbody/tr[1]/td[1]/a")
-        link = "https://noaa-cdr-ndvi-pds.s3.amazonaws.com/index.html#data/" + str(year) + "/" + link.text
-        links.append(link)
-        driver.quit()
+        link.click()
+
+        # Wait for download to finish
+        wait_for_download(download_folder)
+
+        # Clear search box
+        for i in range(0, 11):
+            search_box.send_keys(Keys.BACKSPACE)
+
+    # Quit driver
+    driver.quit()
