@@ -35,24 +35,29 @@ weather <- read.csv("./data/bbs/Weather.csv") |>
   unite("date", sep = "-", Year, Month, Day, remove = FALSE) |>
   mutate(date = as.Date(date, tz = "America/New_York"))
 
-# Import BBS data, and filter
+# Import BBS data
 bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
   left_join(read.csv("./data/bbs/Routes.csv"), 
             by = c("Route", "CountryNum", "StateNum")) |>
+  mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) |>
+  dplyr::select(RouteDataID, Latitude, Longitude, AOU, starts_with("Count")) |>
+  dplyr::select(-CountryNum) |>
+  complete(AOU, nesting(RouteDataID, Latitude, Longitude)) %>%
+  replace(is.na(.), 0) |> # magrittr pipe on line 48 allows for this format
   filter(AOU == aou_cc) |>
   left_join(weather, by = c("RouteDataID"))
 
-# Isolate BBS data in area of interest; get dates of observations
+# Isolate BBS data in area of interest
 obs_dates <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
                   crs = crs(mojave)) |>
   mask(mojave) |>
   as.data.frame(geom = "XY") |>
   rename(Longitude = x, Latitude = y) |>
-  dplyr::select(Latitude, Longitude, date, Year.x) |>
-  dplyr::rename(Year = Year.x, Date = date)
+  dplyr::select(Latitude, Longitude, date, Year) |>
+  dplyr::rename(Date = date)
 write.csv(obs_dates, "./data/bbs_obs_mojave.csv")
 
 # Transform dates

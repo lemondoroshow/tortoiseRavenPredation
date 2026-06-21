@@ -21,11 +21,16 @@ def wait_for_download(dl_path):
             if file.endswith('.crdownload'):
                 wait = True
 
+# Find which NDVIs are already downloaded and processed
+downloaded = os.listdir(Path.cwd() / "data/ndvi/processed/")
+downloaded = sorted([int(d[:-4].replace("-", "")) for d in downloaded])
+
 # Get list of dates including and after 2001
 all_dates = pd.read_csv("data/bbs_obs_mojave.csv")
-dates = sorted([int(dt.strftime(dt.strptime(d, "%Y-%m-%d"), format = "%Y%m%d"))
-                for d in all_dates["Date"]])
-dates = set([d for d in dates if d >= 20010101])
+dates = [int(dt.strftime(dt.strptime(d, "%Y-%m-%d"), format = "%Y%m%d"))
+             for d in all_dates["Date"]]
+dates = sorted(list(set([d for d in dates if 
+                        (d >= 20010101 and d not in downloaded)])))
 
 # Iterate through years
 print("Enter start year: ")
