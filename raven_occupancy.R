@@ -331,3 +331,48 @@ for (yoi in years) {
   writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
   
 }
+#### Visualization ####
+
+# Import Mojave shapefile
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
+  project("WGS84")
+
+# Create bounding box for plots
+bbox <- st_bbox(mojave)
+x_range <- bbox$xmax - bbox$xmin
+y_range <- bbox$ymax - bbox$ymin
+bbox[1] <- bbox[1] - 0.10 * x_range
+bbox[2] <- bbox[2] - 0.13 * y_range
+bbox[3] <- bbox[3] + 0.13 * x_range
+bbox[4] <- bbox[4] + 0.10 * y_range
+bbox <- st_as_sfc(bbox)
+st_crs(bbox) <- crs(mojave)
+
+# Load TCAs
+tcas <- terra::vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
+  project(mojave)
+
+# Iterate through files
+files <- list.files("./results/")
+for (f in files) {
+  
+  # Import data
+  yoi <- substr(f, 1, 4)
+  res <- rast(paste0("./results/", f)) |>
+    project(mojave)
+  
+  # Map results
+  res_map <- tm_shape(res, bbox = bbox) +
+    tm_raster("psi", col.scale = tm_scale(
+      values = "crest", n = 5
+    ), col.legend = tm_legend(
+      position = tm_pos_in("right", "bottom")
+    )) +
+    tm_basemap("Esri.WorldGrayCanvas") +
+    tm_title(paste0("C. corax occupancy probability in ", yoi)) +
+    tm_shape(tcas) +
+    tm_borders(col = "black")
+  
+  # Save
+  tmap_save(res_map, paste0("./plots/occupancy/", yoi, ".png"))
+}
