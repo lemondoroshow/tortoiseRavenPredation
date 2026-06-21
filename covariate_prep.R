@@ -213,8 +213,7 @@ for (yoi in years) {
     ndvi <- rast(file) |>
       terra::subset("NDVI") |>
       project(mojave) |>
-      mask(mojave) |>
-      crop(mojave)
+      crop(bbox)
     
     # Export data
     writeRaster(ndvi, paste0("./data/ndvi/processed/", format(date), ".tif"),
