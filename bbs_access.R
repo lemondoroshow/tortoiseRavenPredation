@@ -12,7 +12,7 @@ library(tidyterra)
 #### Single year ####
 
 # Define year of interest
-yoi <- 2024
+yoi <- 2004
 
 # Get common raven AOU
 spec <- read.csv("./data/bbs/SpeciesList.csv") |>
@@ -74,7 +74,8 @@ for (row in 1:dim(bbs_obs_mojave)[1]) {
   
   # Import NDVI data
   date <- format(bbs_obs_mojave$date[row])
-  ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
+  ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif")) |>
+    focal(w = 11, fun = mean, na.policy = "only", na.rm = TRUE) 
   
   # Get NDVI at coords
   ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
@@ -90,7 +91,7 @@ elev_ext <- terra::extract(elev, coords)
 bbs_obs_mojave$Elevation <- unlist(elev_ext[,2])
 
 # Extract road density, add to data frame
-roads <- rast(paste0("./data/roads/", as.character(yoi), ".tif"))
+roads <- rast(paste0("./data/roads/", as.character(2024), ".tif"))
 roads_ext <- terra::extract(roads, coords)
 bbs_obs_mojave$RoadDensity <- unlist(roads_ext[,2])
 
@@ -227,7 +228,8 @@ for (yoi in years) {
     
     # Import NDVI data
     date <- format(bbs_obs_mojave$date[row])
-    ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
+    ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif")) |>
+      focal(w = 11, fun = mean, na.policy = "only", na.rm = TRUE) 
     
     # Get NDVI at coords
     ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
