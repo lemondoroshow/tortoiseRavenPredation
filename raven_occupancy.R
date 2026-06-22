@@ -387,3 +387,35 @@ for (f in files) {
 }
 
 #### Model evaluation ####
+
+# Iterate through years
+model_name <- "elevation+ndvi+impervious+roads+lines"
+new_waic <- c()
+new_tfd <- c()
+years <- 2001:2024
+years <- years[! years %in% c(2020)]
+for (yoi in years) {
+
+  # Find file matching year
+  # NOTE: This assumes there is only one file per year in the runs folder
+  f <- list.files("./runs", pattern = as.character(yoi), full.names = TRUE)[1]
+  load(f)
+  
+  # Get metrics
+  new_waic <- c(
+    new_waic,
+    waicOcc(out)["WAIC"]
+  )
+  new_tfd <- c(new_tfd, out$k.fold.deviance)
+  
+}
+
+# Add to data frame
+waic <- read.csv("./results/eval/waic.csv") |>
+  mutate(!!model_name := new_waic)
+ten_fold_dev <- read.csv("./results/eval/ten_fold_dev.csv") |>
+  mutate(!!model_name := new_tfd)
+
+# Export data frames
+write.csv(waic, "./results/eval/waic.csv", row.names = FALSE)
+write.csv(ten_fold_dev, "./results/eval/ten_fold_dev.csv", row.names = FALSE)
