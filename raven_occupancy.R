@@ -6,10 +6,14 @@ library(spOccupancy)
 library(terra)
 library(tmap)
 
+set.seed(04021990)
+
 #### One year ####
 
+yoi <- 2024
+
 # Import data
-load("./data/bbs_and_cov_data_bundle.R")
+load(paste0("./data/bundles/", as.character(yoi), "_data_bundle.R"))
 
 # Get coordinates and project to AEA for CONUS
 coords_aea <- data.frame(bbs_data$coords) |>
@@ -74,7 +78,9 @@ out <- spPGOcc(occ.formula = occ.formula,
                cov.model = 'gaussian', 
                n.burn = n.burn,
                n.thin = n.thin,
-               n.report = n.report)
+               n.report = n.report,
+               k.fold = 10, 
+               k.fold.threads = 10)
 run_str <- paste0(as.character(yoi), "_chain", chain, "_", 
                   format(Sys.time(), "%Y-%m-%dT%H:%M:%S%Z"))
 save(out, file = paste("runs/bbs_spPGOcc_", run_str, ".R", sep = ''))
@@ -233,7 +239,9 @@ for (yoi in years) {
                  cov.model = 'gaussian', 
                  n.burn = n.burn,
                  n.thin = n.thin,
-                 n.report = n.report)
+                 n.report = n.report,
+                 k.fold = 10, 
+                 k.fold.threads = 10)
   run_str <- paste0(as.character(yoi), "_chain", chain, "_", 
                     format(Sys.time(), "%Y-%m-%dT%H:%M:%S%Z"))
   save(out, file = paste("runs/bbs_spPGOcc_", run_str, ".R", sep = ''))
@@ -331,6 +339,7 @@ for (yoi in years) {
   writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
   
 }
+
 #### Visualization ####
 
 # Import Mojave shapefile
