@@ -336,7 +336,7 @@ for (yoi in years) {
   # Create prediction raster
   occ_rast <- as.data.frame(occ_loc) |>
     rast(crs = "EPSG:5070")
-  writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
+  writeRaster(occ_rast, paste0("./results/rasts/", run_str, ".tif"), overwrite = TRUE)
   
 }
 
@@ -362,12 +362,12 @@ tcas <- terra::vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
   project(mojave)
 
 # Iterate through files
-files <- list.files("./results/")
+files <- list.files("./results/rasts/")
 for (f in files) {
   
   # Import data
   yoi <- substr(f, 1, 4)
-  res <- rast(paste0("./results/", f)) |>
+  res <- rast(paste0("./results/rasts/", f)) |>
     project(mojave)
   
   # Map results
@@ -385,3 +385,5 @@ for (f in files) {
   # Save
   tmap_save(res_map, paste0("./plots/occupancy/", yoi, ".png"))
 }
+
+#### Model evaluation ####
