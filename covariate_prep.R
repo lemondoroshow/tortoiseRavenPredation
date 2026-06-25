@@ -301,13 +301,12 @@ years <- 2001:2024
 years <- years[! years %in% c(2020)]
 for (yoi in years) {
   
-  # Open tower data
   co <- read.table("./data/towers/raw/CO.dat", sep = "|", 
                    header = FALSE, fill = TRUE) |>
     dplyr::select(c("V5", "V11", "V16"))
   ra <- read.table("./data/towers/raw/RA.dat", sep = "|", 
                    header = FALSE, fill = TRUE) |>
-    dplyr::select(c("V5", "V13", "V14"))
+    dplyr::select(c("V5", "V13", "V14", "V31"))
   co$V5 <- as.character(co$V5)
   towers <- left_join(co, ra, by = "V5") |>
     mutate(V13 = na_if(V13, "")) |>
@@ -324,9 +323,11 @@ for (yoi in years) {
   xs <- -1 * towers$V16 / 3600
   towers$Latitude <- ys
   towers$Longitude <- xs
+  towers$Height <- as.numeric(towers$V31)
   
   # Convert to geom object
-  towers <- as.data.frame(towers) |>
+  towers <- dplyr::select(towers, c("Latitude", "Longitude", "YearConstructed",
+                                    "YearDismantled", "Height")) |>
     dplyr::filter(YearConstructed <= yoi & YearDismantled > yoi) |>
     vect(crs = "NAD83", geom = c("Longitude", "Latitude")) |>
     project(mojave) |>
@@ -339,6 +340,7 @@ for (yoi in years) {
     tidyterra::rename(distance = layer)
   
   # Write raster
-  writeRaster(tower_dist, paste0("./data/towers/processed/", yoi, ".tif"))
+  writeRaster(tower_dist, paste0("./data/towers/processed/", yoi, ".tif"),
+              overwrite = TRUE)
   
 }
