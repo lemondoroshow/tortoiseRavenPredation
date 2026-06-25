@@ -262,6 +262,18 @@ for (yoi in years) {
   impervious_ext <- terra::extract(impervious, coords)
   bbs_obs_mojave$PercentImpervious <- unlist(impervious_ext[,2])
   
+  # Extract tower distance, add to data frame
+  towers <- rast(paste0("./data/towers/processed/", 
+                            as.character(yoi), ".tif"))
+  towers_ext <- terra::extract(towers, coords)
+  bbs_obs_mojave$TowerDistance <- unlist(towers_ext[,2])
+  
+  # Extract tower distance, add to data frame
+  landfills <- rast(paste0("./data/landfills/", 
+                        as.character(yoi), ".tif"))
+  landfills_ext <- terra::extract(landfills, coords)
+  bbs_obs_mojave$LandfillDistance <- unlist(landfills_ext[,2])
+  
   # Compile all variables
   all_vars <- data.frame(day = det_covs$day, 
                          day.2 = det_covs$day.2, 
@@ -303,13 +315,24 @@ for (yoi in years) {
     lines = c(
       mean(all_covs$TransmissionLineDistance),
       sd(all_covs$TransmissionLineDistance)
+    ), 
+    towers = c(
+      mean(all_covs$TowerDistance),
+      sd(all_covs$TowerDistance)
+    ),
+    landfills = c(
+      mean(all_covs$LandfillDistance),
+      sd(all_covs$LandfillDistance)
     )
+    
   )
   occ_covs <- data.frame(elevation = c(scale(all_covs$Elevation)), 
                          ndvi = c(scale(all_covs$NDVI)),
                          impervious = c(scale(all_covs$PercentImpervious)),
                          roads = c(scale(all_covs$RoadDensity)),
-                         lines = c(scale(all_covs$TransmissionLineDistance)))
+                         lines = c(scale(all_covs$TransmissionLineDistance)),
+                         towers = c(scale(all_covs$TowerDistance)),
+                         landfills = c(scale(all_covs$LandfillDistance)))
   
   # Bundle and save data
   bbs_data <- list(y = y, det.covs = det_covs, occ.covs = occ_covs, 
