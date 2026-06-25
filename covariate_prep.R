@@ -1,3 +1,4 @@
+rm(list = ls())
 library(elevatr)
 library(sf)
 library(terra)
@@ -247,4 +248,43 @@ for (yoi in years) {
       writeRaster(impervious, paste0("./data/impervious/processed/",
                                      as.character(yoi), ".tif"), overwrite = TRUE)
     }
+}
+#### Landfills -- all years ####
+
+# Import shapefiles
+mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
+  project("WGS84")
+conus <- vect("./data/shapefiles/CONUS/conus_ard_grid.shp") |>
+  project("WGS84")
+
+# Iterate through years
+years <- 2001:2024
+years <- years[! years %in% c(2020)]
+for (yoi in years) {
+  
+  # Read data and filter
+  landfills <- read.csv("./data/lmop_database.csv") |>
+    dplyr::select(c(Longitude, Latitude, Landfill.ID, Year.Landfill.Opened,
+                    Landfill.Closure.Year)) |>
+    dplyr::rename(ID = Landfill.ID, Open = Year.Landfill.Opened, 
+                  Close = Landfill.Closure.Year) |>
+    # Technically speaking, we can't be certain whether we are ignoring some 
+    # landfills that are open with no expected landfill date. However, these 
+    # landfills are ignored to avoid inconsistency with the same situation 
+    # potentially occurring in past data
+    dplyr::filter(Open <= yoi & Close > yoi) |>
+    vect(crs = "NAD83", geom = c("Longitude", "Latitude")) |>
+    project(mojave) |>
+    crop(conus)
+  
+  # Rasterize landfills by distance
+  landfill_rast <- rast(ext(mojave), res = 0.1, crs = crs(mojave))
+  landfill_dist <- distance(landfill_rast, landfills, rasterize = TRUE) |>
+    mask(mojave) |>
+    tidyterra::rename(distance = layer)
+  
+  # Export raster
+  writeRaster(landfill_dist, paste0("./data/landfills/", yoi, ".tif"),
+              overwrite = TRUE)
+  
 }
