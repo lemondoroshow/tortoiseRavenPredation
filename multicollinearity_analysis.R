@@ -135,3 +135,12 @@ vif(model)
 # 2.212871                 2.251215                 1.774513                 2.072192 
 # PercentImpervious         LandfillDistance 
 # 1.939284                 2.632395 
+
+# Define expanded model
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TowerDistance +
+              PercentImpervious + LandfillDistance, data = data)
+vif(model)
+# NDVI         Elevation       RoadDensity     TowerDistance PercentImpervious 
+# 2.512384          2.292093          1.830997          2.215873          1.911185 
+# LandfillDistance 
+# 2.492637 
