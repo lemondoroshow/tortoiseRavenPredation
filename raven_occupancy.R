@@ -168,7 +168,7 @@ writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
 
 #### All years ####
 
-model_name <- "elevation+ndvi+impervious+roads+towers+landfills"
+model_name <- "el+nd+im+ro+to+la+imXro+imXla+toXro"
 
 # Iterate through years
 years <- 2001:2024
@@ -198,10 +198,12 @@ for (yoi in years) {
   w.start <- p_file[p_file[, 1] == 'w', 2]
   
   # Specify model
-  occ.formula <- ~ elevation + ndvi + impervious + roads + towers + landfills
+  occ.formula <- ~ elevation + ndvi + impervious + roads + towers + landfills +
+    impervious * roads + impervious * landfills + towers * roads
   det.formula <- ~ day + day.2 + tod + (1 | obs)
   p.det <- length(bbs_data$det.covs)
-  p.occ <- ncol(bbs_data$occ.covs) # covs + intercept - missing "lines"
+  # p.occ => covs + intercept - "lines" missing from data + interactions
+  p.occ <- ncol(bbs_data$occ.covs) + 1 - 1 + 3
   dist.bbs <- dist(bbs_data$coords)
   mean.dist <- mean(dist.bbs)
   min.dist <- min(dist.bbs)
@@ -316,24 +318,27 @@ for (yoi in years) {
     # ) |> left_join(
     #   as.data.frame(lines, xy = TRUE),
     #   by = c("x", "y")
-      # ) |> left_join(
-      #   as.data.frame(impervious * roads, xy = TRUE),
-      #   by = c("x", "y")
-      # ) |> left_join(
-      #   as.data.frame(lines * roads, xy = TRUE),
-      #   by = c("x", "y")
     ) |> left_join(
       as.data.frame(towers, xy = TRUE),
       by = c("x", "y")
     ) |> left_join(
       as.data.frame(landfills, xy = TRUE),
       by = c("x", "y")
+    ) |> left_join(
+      as.data.frame(impervious * roads, xy = TRUE),
+      by = c("x", "y")
+    ) |> left_join(
+      as.data.frame(impervious * landfills, xy = TRUE),
+      by = c("x", "y")
+    ) |> left_join(
+      as.data.frame(towers * roads, xy = TRUE),
+      by = c("x", "y")
     ) |>
     na.omit()
   colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", 
                       #"lines", 
-                      "towers", "landfills")
-  #"impervious_x_roads", "lines_x_roads")
+                      "towers", "landfills", "impervious_x_roads", 
+                      "impervious_x_landfills", "towers_x_roads")
   n_locs <- dim(covs)[1]
   
   # Prepare covariate matrix
