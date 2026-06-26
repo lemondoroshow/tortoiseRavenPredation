@@ -24,7 +24,7 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
   bind_rows(read.csv("./data/bbs/States/Califor.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Nevada.csv")) |>
   bind_rows(read.csv("./data/bbs/States/Utah.csv")) |>
-  left_join(read.csv("./data/bbs/Routes.csv"), 
+  left_join(read.csv("./data/bbs/Routes.csv"),
             by = c("Route", "CountryNum", "StateNum")) |>
   filter(Year == yoi) |>
   mutate(RouteNum = paste0(StateNum, formatC(Route, 2, flag = "0"))) |>
@@ -38,7 +38,7 @@ bbs_obs <- read.csv("./data/bbs/States/Arizona.csv") |>
 # Isolate BBS data in area of interest
 mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
   project("WGS84")
-bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"), 
+bbs_obs_mojave <- vect(bbs_obs, geom = c("Longitude", "Latitude"),
                        crs = crs(mojave)) |>
   mask(mojave) |>
   as.data.frame(geom = "XY") |>
@@ -59,11 +59,11 @@ data <- dplyr::select(bbs_obs_mojave, c(Latitude, Longitude, date)) |>
 # Extract NDVIs
 ndvis <- c()
 for (row in 1:dim(data)[1]) {
-  
+
   # Import NDVI data
   date <- format(data$date[row])
   ndvi <- rast(paste0("./data/ndvi/processed/", date, ".tif"))
-  
+
   # Get NDVI at coords
   ndvi_ext <- terra::extract(ndvi, coords[row,])[,2]
   ndvis <- c(ndvis, ndvi_ext)
@@ -89,20 +89,20 @@ data$TransmissionLineDistance <- unlist(lines_ext[,2]) |>
   scale()
 
 # Extract % impervious, add to data frame
-impervious <- rast(paste0("./data/impervious/processed/", 
+impervious <- rast(paste0("./data/impervious/processed/",
                           as.character(yoi), ".tif"))
 impervious_ext <- terra::extract(impervious, coords)
 data$PercentImpervious <- unlist(impervious_ext[,2]) |>
   scale()
 
 # Extract tower distance, add to data frame
-towers <- rast(paste0("./data/towers/processed/", 
+towers <- rast(paste0("./data/towers/processed/",
                       as.character(yoi), ".tif"))
 towers_ext <- terra::extract(towers, coords)
 data$TowerDistance <- unlist(towers_ext[,2])
 
 # Extract tower distance, add to data frame
-landfills <- rast(paste0("./data/landfills/", 
+landfills <- rast(paste0("./data/landfills/",
                          as.character(yoi), ".tif"))
 landfills_ext <- terra::extract(landfills, coords)
 data$LandfillDistance <- unlist(landfills_ext[,2])
@@ -110,19 +110,28 @@ data$LandfillDistance <- unlist(landfills_ext[,2])
 #### Conduct analysis ####
 
 # Define basic model
-model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance + 
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance +
               PercentImpervious, data = data)
 vif(model)
-# NDVI                Elevation              RoadDensity TransmissionLineDistance 
-# 1.992871                 1.956227                 1.565652                 1.942048 
-# PercentImpervious 
-# 1.239908 
+# NDVI                Elevation              RoadDensity TransmissionLineDistance
+# 1.992871                 1.956227                 1.565652                 1.942048
+# PercentImpervious
+# 1.239908
 
 # Define expanded model
-model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance + 
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance +
               PercentImpervious + TowerDistance + LandfillDistance, data = data)
 vif(model)
+# NDVI                Elevation              RoadDensity TransmissionLineDistance
+# 2.746589                 2.298054                 1.833766                11.303909
+# PercentImpervious            TowerDistance         LandfillDistance
+# 1.949094                12.087701                 2.852308
+
+# Define expanded model
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance +
+              PercentImpervious + LandfillDistance, data = data)
+vif(model)
 # NDVI                Elevation              RoadDensity TransmissionLineDistance 
-# 2.746589                 2.298054                 1.833766                11.303909 
-# PercentImpervious            TowerDistance         LandfillDistance 
-# 1.949094                12.087701                 2.852308 
+# 2.212871                 2.251215                 1.774513                 2.072192 
+# PercentImpervious         LandfillDistance 
+# 1.939284                 2.632395 
