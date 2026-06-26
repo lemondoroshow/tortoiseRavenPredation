@@ -1,3 +1,4 @@
+rm(list = ls())
 library(car)
 library(terra)
 library(tidyverse)
@@ -94,6 +95,18 @@ impervious_ext <- terra::extract(impervious, coords)
 data$PercentImpervious <- unlist(impervious_ext[,2]) |>
   scale()
 
+# Extract tower distance, add to data frame
+towers <- rast(paste0("./data/towers/processed/", 
+                      as.character(yoi), ".tif"))
+towers_ext <- terra::extract(towers, coords)
+data$TowerDistance <- unlist(towers_ext[,2])
+
+# Extract tower distance, add to data frame
+landfills <- rast(paste0("./data/landfills/", 
+                         as.character(yoi), ".tif"))
+landfills_ext <- terra::extract(landfills, coords)
+data$LandfillDistance <- unlist(landfills_ext[,2])
+
 #### Conduct analysis ####
 
 # Define basic model
@@ -104,3 +117,12 @@ vif(model)
 # 1.992871                 1.956227                 1.565652                 1.942048 
 # PercentImpervious 
 # 1.239908 
+
+# Define expanded model
+model <- lm(Counts ~ NDVI + Elevation + RoadDensity + TransmissionLineDistance + 
+              PercentImpervious + TowerDistance + LandfillDistance, data = data)
+vif(model)
+# NDVI                Elevation              RoadDensity TransmissionLineDistance 
+# 2.746589                 2.298054                 1.833766                11.303909 
+# PercentImpervious            TowerDistance         LandfillDistance 
+# 1.949094                12.087701                 2.852308 
