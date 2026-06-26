@@ -168,6 +168,8 @@ writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
 
 #### All years ####
 
+model_name <- "elevation+ndvi+impervious+roads+lines+towers+landfills"
+
 # Iterate through years
 years <- 2001:2024
 years <- years[! years %in% c(2020)]
@@ -196,7 +198,8 @@ for (yoi in years) {
   w.start <- p_file[p_file[, 1] == 'w', 2]
   
   # Specify model
-  occ.formula <- ~ elevation + ndvi + impervious + roads + lines
+  occ.formula <- ~ elevation + ndvi + impervious + roads + lines + 
+                   towers + landfills
   det.formula <- ~ day + day.2 + tod + (1 | obs)
   p.det <- length(bbs_data$det.covs)
   p.occ <- ncol(bbs_data$occ.covs) + 1 # covs + intercept
@@ -244,7 +247,7 @@ for (yoi in years) {
                  k.fold.threads = 10)
   run_str <- paste0(as.character(yoi), "_chain", chain, "_", 
                     format(Sys.time(), "%Y-%m-%dT%H:%M:%S%Z"))
-  save(out, file = paste("runs/bbs_spPGOcc_", run_str, ".R", sep = ''))
+  save(out, file = paste0("runs/", model_name, "/bbs_spPGOcc_", run_str, ".R"))
   
   # Get points in Mojave to predict at
   mojave <- vect("./data/shapefiles/RU/2011RecoveryUnitsDissolved.shp") |>
@@ -288,6 +291,17 @@ for (yoi in years) {
     resample(mojave_points) |>
     scale(center = bbs_data$stats$impervious[1], 
           scale = bbs_data$stats$impervious[2])
+  towers <- rast(paste0("./data/towers/processed/", 
+                        as.character(yoi), ".tif")) |>
+    project("EPSG:5070") |>
+    resample(mojave_points) |>
+    scale(center = bbs_data$stats$towers[1], 
+          scale = bbs_data$stats$towers[2])
+  landfills <- rast(paste0("./data/landfills/", as.character(yoi), ".tif")) |>
+    project("EPSG:5070") |>
+    resample(mojave_points) |>
+    scale(center = bbs_data$stats$landfills[1], 
+          scale = bbs_data$stats$landfills[2])
   
   # Put covariates together
   covs <- as.data.frame(elev, xy = TRUE) |>
@@ -309,9 +323,16 @@ for (yoi in years) {
       # ) |> left_join(
       #   as.data.frame(lines * roads, xy = TRUE),
       #   by = c("x", "y")
+    ) |> left_join(
+      as.data.frame(towers, xy = TRUE),
+      by = c("x", "y")
+    ) |> left_join(
+      as.data.frame(landfills, xy = TRUE),
+      by = c("x", "y")
     ) |>
     na.omit()
-  colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", "lines")
+  colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", 
+                      "lines", "towers", "landfills")
   #"impervious_x_roads", "lines_x_roads")
   n_locs <- dim(covs)[1]
   
@@ -336,7 +357,8 @@ for (yoi in years) {
   # Create prediction raster
   occ_rast <- as.data.frame(occ_loc) |>
     rast(crs = "EPSG:5070")
-  writeRaster(occ_rast, paste0("./results/rasts/", run_str, ".tif"), overwrite = TRUE)
+  writeRaster(occ_rast, paste0("./results/", model_name, 
+                               "/", run_str, ".tif"), overwrite = TRUE)
   
 }
 
@@ -362,12 +384,12 @@ tcas <- terra::vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
   project(mojave)
 
 # Iterate through files
-files <- list.files("./results/rasts/")
+files <- list.files(paste0("./results/", model_name))
 for (f in files) {
   
   # Import data
   yoi <- substr(f, 1, 4)
-  res <- rast(paste0("./results/rasts/", f)) |>
+  res <- rast(paste0("./results/", model_name, "/", f)) |>
     project(mojave)
   
   # Map results
@@ -383,13 +405,12 @@ for (f in files) {
     tm_borders(col = "black")
   
   # Save
-  tmap_save(res_map, paste0("./plots/occupancy/", yoi, ".png"))
+  tmap_save(res_map, paste0("./plots/occupancy/", model_name, "/", yoi, ".png"))
 }
 
 #### Model evaluation ####
 
 # Iterate through years
-model_name <- "elevation+ndvi+impervious+roads+lines"
 new_waic <- c()
 new_tfd <- c()
 years <- 2001:2024
@@ -398,7 +419,8 @@ for (yoi in years) {
 
   # Find file matching year
   # NOTE: This assumes there is only one file per year in the runs folder
-  f <- list.files("./runs", pattern = as.character(yoi), full.names = TRUE)[1]
+  f <- list.files(paste0("./runs/", model_name), 
+                  pattern = as.character(yoi), full.names = TRUE)[1]
   load(f)
   
   # Get metrics
