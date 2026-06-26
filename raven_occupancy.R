@@ -168,7 +168,7 @@ writeRaster(occ_rast, paste0("./results/", run_str, ".tif"), overwrite = TRUE)
 
 #### All years ####
 
-model_name <- "elevation+ndvi+impervious+roads+lines+towers+landfills"
+model_name <- "elevation+ndvi+impervious+roads+towers+landfills"
 
 # Iterate through years
 years <- 2001:2024
@@ -198,11 +198,10 @@ for (yoi in years) {
   w.start <- p_file[p_file[, 1] == 'w', 2]
   
   # Specify model
-  occ.formula <- ~ elevation + ndvi + impervious + roads + lines + 
-                   towers + landfills
+  occ.formula <- ~ elevation + ndvi + impervious + roads + towers + landfills
   det.formula <- ~ day + day.2 + tod + (1 | obs)
   p.det <- length(bbs_data$det.covs)
-  p.occ <- ncol(bbs_data$occ.covs) + 1 # covs + intercept
+  p.occ <- ncol(bbs_data$occ.covs) # covs + intercept - missing "lines"
   dist.bbs <- dist(bbs_data$coords)
   mean.dist <- mean(dist.bbs)
   min.dist <- min(dist.bbs)
@@ -280,11 +279,11 @@ for (yoi in years) {
     resample(mojave_points) |>
     scale(center = bbs_data$stats$roads[1], 
           scale = bbs_data$stats$roads[2])
-  lines <- rast("./data/transmissionLines/all_time.tif") |>
-    project("EPSG:5070") |>
-    resample(mojave_points) |>
-    scale(center = bbs_data$stats$lines[1], 
-          scale = bbs_data$stats$lines[2])
+  # lines <- rast("./data/transmissionLines/all_time.tif") |>
+  #   project("EPSG:5070") |>
+  #   resample(mojave_points) |>
+  #   scale(center = bbs_data$stats$lines[1], 
+  #         scale = bbs_data$stats$lines[2])
   impervious <- rast(paste0("./data/impervious/processed/", 
                             as.character(yoi), ".tif")) |>
     project("EPSG:5070") |>
@@ -314,9 +313,9 @@ for (yoi in years) {
     ) |> left_join(
       as.data.frame(roads, xy = TRUE),
       by = c("x", "y")
-    ) |> left_join(
-      as.data.frame(lines, xy = TRUE),
-      by = c("x", "y")
+    # ) |> left_join(
+    #   as.data.frame(lines, xy = TRUE),
+    #   by = c("x", "y")
       # ) |> left_join(
       #   as.data.frame(impervious * roads, xy = TRUE),
       #   by = c("x", "y")
@@ -332,7 +331,8 @@ for (yoi in years) {
     ) |>
     na.omit()
   colnames(covs) <- c("x", "y", "elevation", "ndvi", "impervious", "roads", 
-                      "lines", "towers", "landfills")
+                      #"lines", 
+                      "towers", "landfills")
   #"impervious_x_roads", "lines_x_roads")
   n_locs <- dim(covs)[1]
   
