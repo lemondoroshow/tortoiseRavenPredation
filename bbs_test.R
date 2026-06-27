@@ -74,3 +74,9 @@ species_counts_mojave <- mutate(
     unlist(),
 )
 write.csv(species_counts_mojave, "./data/species_counts_mojave.csv")
+
+# Check most common raptors
+raptors_mojave <- dplyr::filter(
+  species_counts_mojave,
+  Order == "Strigiformes" | Order == "Accipitriformes" | Order == "Falconiformes"
+)
