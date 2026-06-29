@@ -278,7 +278,7 @@ ggsave("./plots/tortoiseDensities/northeastern_mojave_fit_nolog.png", nm_fit_plo
 # Clean up
 rm(list=setdiff(ls(), "df"))
 
-#### Ravens -- TCA####
+#### Ravens -- preparation ####
 
 # Load shapefiles
 tcas <- vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
@@ -359,3 +359,44 @@ for (i in 1:dim(rus)[1]) {
 # Export data frames
 write.csv(raven_occ_tca, "./data/raven_psi_tca.csv", row.names = FALSE)
 write.csv(raven_occ_ru, "./data/raven_psi_ru.csv", row.names = FALSE)
+
+#### Ravens -- visualization ####
+
+# Import data
+tca_data_ga <- read.csv("./data/tortoise_densities.csv")
+tca_data_cc <- read.csv("./data/raven_psi_tca.csv")
+ru_data_cc <- read.csv("./data/raven_psi_ru.csv")
+
+# Iterate through TCAs
+years <- 2001:2024
+for (tca in colnames(tca_data_ga)[-1]) {
+  
+  # Isolate data for TCA
+  tortoise <- dplyr::select(tca_data_ga, !!tca) |>
+    dplyr::rename(tortoise = !!tca)
+  raven <- dplyr::select(tca_data_cc, !!tca) |>
+    dplyr::rename(raven = !!tca)
+  data <- data.frame(
+    year = years, 
+    tortoise = scale(tortoise), 
+    raven = scale(raven)
+  )
+  
+  # Plot data
+  colors <- c("G. agassizii\ndensity" = "blue", "C. corax\nocc. prob." = "red")
+  plot <- ggplot(na.omit(data), aes(x = year)) +
+    geom_point(aes(y = tortoise, color = "G. agassizii\ndensity")) +
+    geom_line(aes(y = tortoise), color = "blue") +
+    geom_point(aes(y = raven, color = "C. corax\nocc. prob.")) +
+    geom_line(aes(y = raven), color = "red") +
+    scale_color_manual(values = colors, name = "variable") +
+    ylab("scaled presence variable") +
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid.minor = element_line(color = "grey"),
+      panel.grid.major = element_line(color = "grey")
+    )
+  
+  # Save plot
+  ggsave(paste0("./plots/tcaTortoiseRaven/", tca, ".png"), plot)
+}
