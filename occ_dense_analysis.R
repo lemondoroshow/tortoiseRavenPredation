@@ -395,7 +395,9 @@ for (tca in colnames(tca_data_ga)[-1]) {
       panel.background = element_rect(fill = "white"),
       panel.grid.minor = element_line(color = "grey"),
       panel.grid.major = element_line(color = "grey")
-    )
+    ) +
+    ggtitle(paste0("Tortoise densities and raven occurrence probabilities in ", 
+                   tca))
   
   # Save plot
   ggsave(paste0("./plots/tcaTortoiseRaven/", tca, ".png"), plot)
