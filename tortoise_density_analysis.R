@@ -278,15 +278,18 @@ ggsave("./plots/tortoiseDensities/northeastern_mojave_fit_nolog.png", nm_fit_plo
 # Clean up
 rm(list=setdiff(ls(), "df"))
 
-#### Ravens ####
+#### Ravens -- TCA####
 
-# Load TCA shapefile
+# Load shapefiles
 tcas <- vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
+  project("WGS84")
+rus <- vect("./data/shapefiles/RU/2011RecoveryUnits.shp") |>
   project("WGS84")
 
 # Create data frame
-raven_occ <- data.frame(matrix(2001:2024, nrow = 24, ncol = 1))
-colnames(raven_occ) <- "year"
+raven_occ_tca <- data.frame(matrix(2001:2024, nrow = 24, ncol = 1))
+colnames(raven_occ_tca) <- "year"
+raven_occ_ru <- data.frame(raven_occ_tca)
 
 # Iterate through TCAs
 model_name <- "el+nd+im+ro+to+la+imXro+imXla+toXro"
@@ -302,7 +305,6 @@ for (i in 1:dim(tcas)[1]) {
     if (yoi != 2020) {
       
       # Load year's results raster; project, mask, and crop
-      model_name <- "el+nd+im+ro+to+la+imXro+imXla+toXro"
       f <- list.files(paste0("./results/", model_name), 
                       pattern = as.character(yoi), full.names = TRUE)[1]
       res <- rast(f) |>
@@ -319,8 +321,41 @@ for (i in 1:dim(tcas)[1]) {
   }
   
   # Add TCA to data frame
-  raven_occ <- mutate(raven_occ, !!name := unlist(psis))
+  raven_occ_tca <- mutate(raven_occ_tca, !!name := unlist(psis))
 }
 
-# Export data frame
-write.csv(raven_occ, "./data/raven_psi.csv", row.names = FALSE)
+# Iterate through RUs
+for (i in 1:dim(rus)[1]) {
+  
+  # Subset TCA vector
+  ru <- subset(rus, i)
+  name <- gsub(" ", "", ru$Unit_Name)
+  psis <- c()
+  
+  # Iterate through years
+  for (yoi in 2001:2024) {
+    if (yoi != 2020) {
+      
+      # Load year's results raster; project, mask, and crop
+      f <- list.files(paste0("./results/", model_name), 
+                      pattern = as.character(yoi), full.names = TRUE)[1]
+      res <- rast(f) |>
+        project(rus) |>
+        mask(ru) |>
+        crop(ru)
+      
+      # Calculate average probability of occurence
+      psi_avg <- global(res, fun = "mean", na.rm = TRUE)
+      psis <- c(psis, psi_avg)
+    } else {
+      psis <- c(psis, NA)
+    }
+  }
+  
+  # Add TCA to data frame
+  raven_occ_ru <- mutate(raven_occ_ru, !!name := unlist(psis))
+}
+
+# Export data frames
+write.csv(raven_occ_tca, "./data/raven_psi_tca.csv", row.names = FALSE)
+write.csv(raven_occ_ru, "./data/raven_psi_ru.csv", row.names = FALSE)
