@@ -1,6 +1,10 @@
+rm(list = ls())
 library(dplyr)
 library(ggplot2)
 library(nlme)
+library(terra)
+
+#### Tortoises ####
 
 # Import tortoise data
 df <- read.csv("./data/tortoise_densities.csv")
@@ -273,3 +277,50 @@ ggsave("./plots/tortoiseDensities/northeastern_mojave_fit_nolog.png", nm_fit_plo
 
 # Clean up
 rm(list=setdiff(ls(), "df"))
+
+#### Ravens ####
+
+# Load TCA shapefile
+tcas <- vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
+  project("WGS84")
+
+# Create data frame
+raven_occ <- data.frame(matrix(2001:2024, nrow = 24, ncol = 1))
+colnames(raven_occ) <- "year"
+
+# Iterate through TCAs
+model_name <- "el+nd+im+ro+to+la+imXro+imXla+toXro"
+for (i in 1:dim(tcas)[1]) {
+  
+  # Subset TCA vector
+  tca <- subset(tcas, i)
+  name <- tca$stratum
+  psis <- c()
+  
+  # Iterate through years
+  for (yoi in 2001:2024) {
+    if (yoi != 2020) {
+      
+      # Load year's results raster; project, mask, and crop
+      model_name <- "el+nd+im+ro+to+la+imXro+imXla+toXro"
+      f <- list.files(paste0("./results/", model_name), 
+                      pattern = as.character(yoi), full.names = TRUE)[1]
+      res <- rast(f) |>
+        project(tcas) |>
+        mask(tca) |>
+        crop(tca)
+      
+      # Calculate average probability of occurence
+      psi_avg <- global(res, fun = "mean", na.rm = TRUE)
+      psis <- c(psis, psi_avg)
+    } else {
+      psis <- c(psis, NA)
+    }
+  }
+  
+  # Add TCA to data frame
+  raven_occ <- mutate(raven_occ, !!name := unlist(psis))
+}
+
+# Export data frame
+write.csv(raven_occ, "./data/raven_psi.csv", row.names = FALSE)
