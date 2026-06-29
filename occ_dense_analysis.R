@@ -400,3 +400,26 @@ for (tca in colnames(tca_data_ga)[-1]) {
   # Save plot
   ggsave(paste0("./plots/tcaTortoiseRaven/", tca, ".png"), plot)
 }
+
+# Iterate through RUs
+for (ru in colnames(ru_data_cc)[-1]) {
+  
+  # Isolate data for RU
+  data <- dplyr::select(ru_data_cc, c(year, !!ru)) |>
+    rename(raven = !!ru)
+  
+  # Plot data
+  plot <- ggplot(na.omit(data), aes(x = year, y = raven)) +
+    geom_point() + 
+    geom_line() +
+    ylab("mean raven occ. prob.") + 
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid = element_line(color = "grey")
+    ) +
+    ggtitle(paste0("Raven occ. prob. in ", ru))
+  
+  # Save plot
+  ggsave(paste0("./plots/ruRaven/", ru, ".png"))
+  
+}
