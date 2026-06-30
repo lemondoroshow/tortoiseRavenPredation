@@ -97,37 +97,44 @@ ols_cd_res <- data.frame(year = df$year, y = df$year * m_cd + b_cd)
 df_cd <- data.frame(
   y = df$PV,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 1
 ) |> rbind(data.frame(
   y = df$FE,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 2
 )) |> rbind(data.frame(
   y = df$CM,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 3
 )) |> rbind(data.frame(
   y = df$PT,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 4
 )) |> rbind(data.frame(
   y = df$JT,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 5
 )) |> rbind(data.frame(
   y = df$CK,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 6
 )) |> rbind(data.frame(
   y = df$AG,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 7
 )) |> 
   group_by(time) |>
   arrange(.by_group = TRUE)
 
 # Fit model
-gls_cd <- gls(y ~ time + stratum + time * stratum,
+gls_cd <- gls(y ~ time + stratum + time.2 + time * stratum,
               data = df_cd, na.action = na.omit)
 
 # Extract OLS fit
@@ -136,7 +143,8 @@ gls_cd_res <- data.frame(
   y = gls_cd$coefficients[1] +
       gls_cd$coefficients[2] * years +
       gls_cd$coefficients[3] * (1 + 2 + 3 + 4 + 5 + 6 + 7) / 7 + # Population-averaged stratum effect
-      gls_cd$coefficients[4] * (1 + 2 + 3 + 4 + 5 + 6 + 7) / 7 * years # Population-averaged stratum x time effect
+      gls_cd$coefficients[4] * years ^ 2 +
+      gls_cd$coefficients[5] * (1 + 2 + 3 + 4 + 5 + 6 + 7) / 7 * years # Population-averaged stratum x time effect
 )
 
 # Plot fits
@@ -151,7 +159,7 @@ cd_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = JT, color = "JT"), shape = 3) +
   geom_point(aes(y = CK, color = "CK"), shape = 15) +
   geom_point(aes(y = AG, color = "AG"), shape = 8) +
-  geom_line(aes(y = y, color = ".OLS Fit"), data = ols_cd_res) +
+  # geom_line(aes(y = y, color = ".OLS Fit"), data = ols_cd_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_cd_res) +
   scale_color_manual(values = cd_fit_colors, name  = "TCA") +
   theme(panel.background = element_rect(fill = "white"),
@@ -177,17 +185,19 @@ ols_em_res <- data.frame(year = df$year, y = df$year * m_em + b_em)
 df_em <- data.frame(
   y = df$EV,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 1
 ) |> rbind(data.frame(
   y = df$IV,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 2
 )) |> 
   group_by(time) |>
   arrange(.by_group = TRUE)
 
 # Fit model
-gls_em <- gls(y ~ time + stratum + time * stratum,
+gls_em <- gls(y ~ time + stratum + time.2 + time * stratum,
               data = df_em, na.action = na.omit)
 
 # Extract OLS fit
@@ -196,7 +206,8 @@ gls_em_res <- data.frame(
   y = gls_em$coefficients[1] +
       gls_em$coefficients[2] * years +
       gls_em$coefficients[3] * (1 + 2) / 2 + # Population-averaged stratum effect
-      gls_em$coefficients[4] * (1 + 2) / 2 * years # Population-averaged stratum x time effect
+      gls_em$coefficients[4] * years ^ 2 +
+      gls_em$coefficients[5] * (1 + 2) / 2 * years # Population-averaged stratum x time effect
 )
 
 # Plot fits
@@ -204,7 +215,7 @@ em_fit_colors <- c("EV" = "#003f5c", "IV" = "#bc5090", ".OLS Fit" = "#994F00", "
 em_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = EV, color = "EV"), shape = 16) +
   geom_point(aes(y = IV, color = "IV"), shape = 17) +
-  geom_line(aes(y = y, color = ".OLS Fit"), data = ols_em_res) +
+  # geom_line(aes(y = y, color = ".OLS Fit"), data = ols_em_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_em_res) +
   scale_color_manual(values = em_fit_colors, name  = "TCA") +
   theme(panel.background = element_rect(fill = "white"),
@@ -230,25 +241,29 @@ ols_nm_res <- data.frame(year = df$year, y = df$year * m_nm + b_nm)
 df_nm <- data.frame(
   y = df$CS,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 1
 ) |> rbind(data.frame(
   y = df$MM,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 2
 )) |> rbind(data.frame(
   y = df$GB,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 3
 )) |> rbind(data.frame(
   y = df$BD,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 4
 )) |> 
   group_by(time) |>
   arrange(.by_group = TRUE)
 
 # Fit model
-gls_nm <- gls(y ~ time + stratum + time * stratum,
+gls_nm <- gls(y ~ time + stratum + time.2 + time * stratum,
               data = df_nm, na.action = na.omit)
 
 # Extract OLS fit
@@ -257,7 +272,8 @@ gls_nm_res <- data.frame(
   y = gls_nm$coefficients[1] +
       gls_nm$coefficients[2] * years +
       gls_nm$coefficients[3] * (1 + 2 + 3 + 4) / 4 + # Population-averaged stratum effect
-      gls_nm$coefficients[4] * (1 + 2 + 3 + 4) / 4 * years # Population-averaged stratum x time effect
+      gls_nm$coefficients[4] * years ^ 2 +
+      gls_nm$coefficients[5] * (1 + 2 + 3 + 4) / 4 * years # Population-averaged stratum x time effect
 )
 
 # Plot fits
@@ -268,7 +284,7 @@ nm_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = MM, color = "MM"), shape = 17) +
   geom_point(aes(y = GB, color = "GB"), shape = 18) +
   geom_point(aes(y = BD, color = "BD"), shape = 4) +
-  geom_line(aes(y = y, color = ".OLS Fit"), data = ols_nm_res) +
+  # geom_line(aes(y = y, color = ".OLS Fit"), data = ols_nm_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_nm_res) +
   scale_color_manual(values = nm_fit_colors, name  = "TCA") +
   theme(panel.background = element_rect(fill = "white"),
@@ -431,3 +447,44 @@ for (ru in colnames(ru_data_cc)[-1]) {
 }
 
 #### Tortoises and ravens ####
+
+# Import data
+ga_data <- read.csv("./data/tortoise_densities.csv")
+cc_data <- read.csv("./data/raven_psi_ru.csv")
+years <- 1:24
+
+## Western Mojave
+
+# Create GLS dataframe
+df_wm <- data.frame(
+  y = df$FK,
+  time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
+  stratum = 1
+) |> rbind(data.frame(
+  y = df$SC,
+  time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
+  stratum = 2
+)) |> rbind(data.frame(
+  y = df$OR,
+  time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
+  stratum = 3
+)) |> 
+  group_by(time) |>
+  arrange(.by_group = TRUE)
+
+# Fit model
+gls_wm <- gls(y ~ time + stratum + time.2 + time * stratum,
+              data = df_wm, na.action = na.omit)
+
+# Extract OLS fit
+gls_wm_res <- data.frame(
+  year = df$year,
+  y = gls_wm$coefficients[1] +
+    gls_wm$coefficients[2] * years +
+    gls_wm$coefficients[3] * (1 + 2 + 3) / 3 + # Population-averaged stratum effect
+    gls_wm$coefficients[4] * years ^ 2 +
+    gls_wm$coefficients[5] * (1 + 2 + 3) / 3 * years # Population-averaged stratum x time effect
+)
