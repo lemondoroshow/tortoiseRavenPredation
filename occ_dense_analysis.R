@@ -34,21 +34,24 @@ ols_wm_res <- data.frame(year = df$year, y = df$year * m_wm + b_wm)
 df_wm <- data.frame(
   y = df$FK,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 1
 ) |> rbind(data.frame(
   y = df$SC,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 2
 )) |> rbind(data.frame(
   y = df$OR,
   time = df$year - 2000,
+  time.2 = (df$year - 2000) ^ 2,
   stratum = 3
 )) |> 
   group_by(time) |>
   arrange(.by_group = TRUE)
 
 # Fit model
-gls_wm <- gls(y ~ time + stratum + time * stratum,
+gls_wm <- gls(y ~ time + stratum + time.2 + time * stratum,
               data = df_wm, na.action = na.omit)
 
 # Extract OLS fit
@@ -57,7 +60,8 @@ gls_wm_res <- data.frame(
   y = gls_wm$coefficients[1] +
       gls_wm$coefficients[2] * years +
       gls_wm$coefficients[3] * (1 + 2 + 3) / 3 + # Population-averaged stratum effect
-      gls_wm$coefficients[4] * (1 + 2 + 3) / 3 * years # Population-averaged stratum x time effect
+      gls_wm$coefficients[4] * years ^ 2 +
+      gls_wm$coefficients[5] * (1 + 2 + 3) / 3 * years # Population-averaged stratum x time effect
 )
 
 # Plot fits
@@ -67,7 +71,7 @@ wm_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = FK, color = "FK"), shape = 16) +
   geom_point(aes(y = SC, color = "SC"), shape = 17) +
   geom_point(aes(y = OR, color = "OR"), shape = 18) +
-  geom_line(aes(y = y, color = ".OLS Fit"), data = ols_wm_res) +
+  #geom_line(aes(y = y, color = ".OLS Fit"), data = ols_wm_res) +
   geom_line(aes(y = y, color = ".GLS Fit"), data = gls_wm_res) +
   scale_color_manual(values = wm_fit_colors, name  = "TCA") +
   theme(panel.background = element_rect(fill = "white"),
@@ -425,3 +429,5 @@ for (ru in colnames(ru_data_cc)[-1]) {
   ggsave(paste0("./plots/ruRaven/", ru, ".png"))
   
 }
+
+#### Tortoises and ravens ####
