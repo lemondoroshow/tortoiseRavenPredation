@@ -453,38 +453,81 @@ ga_data <- read.csv("./data/tortoise_densities.csv")
 cc_data <- read.csv("./data/raven_psi_ru.csv")
 years <- 1:24
 
-## Western Mojave
-
-# Create GLS dataframe
-df_wm <- data.frame(
-  y = df$FK,
-  time = df$year - 2000,
-  time.2 = (df$year - 2000) ^ 2,
-  stratum = 1
-) |> rbind(data.frame(
-  y = df$SC,
-  time = df$year - 2000,
-  time.2 = (df$year - 2000) ^ 2,
-  stratum = 2
-)) |> rbind(data.frame(
-  y = df$OR,
-  time = df$year - 2000,
-  time.2 = (df$year - 2000) ^ 2,
-  stratum = 3
-)) |> 
-  group_by(time) |>
-  arrange(.by_group = TRUE)
-
-# Fit model
-gls_wm <- gls(y ~ time + stratum + time.2 + time * stratum,
-              data = df_wm, na.action = na.omit)
-
-# Extract OLS fit
-gls_wm_res <- data.frame(
-  year = df$year,
-  y = gls_wm$coefficients[1] +
-    gls_wm$coefficients[2] * years +
-    gls_wm$coefficients[3] * (1 + 2 + 3) / 3 + # Population-averaged stratum effect
-    gls_wm$coefficients[4] * years ^ 2 +
-    gls_wm$coefficients[5] * (1 + 2 + 3) / 3 * years # Population-averaged stratum x time effect
+# Set up variables
+tcas_list <- list(
+  "WesternMojave" = c("FK", "SC", "OR"),
+  "ColoradoDesert" = c("PV", "FE", "CM", "PT", "JT", "CK", "AG"),
+  "EasternMojave" = c("EV", "IV"),
+  "NortheasternMojave" = c("CS", "MM", "GB", "BD")
 )
+rus_list <- names(tcas_list)
+m_ga <- c()
+b_ga <- c()
+m_cc <- c()
+b_cc <- c()
+
+# Iterate through RUs
+res <- data.frame(
+  ru = rus_list
+)
+for (ru in rus_list) {
+  
+  # Get TCAs of interest
+  tcas_tmp <- tcas_list[ru] |>
+    unlist() |>
+    unname()
+  
+  # Fit tortoise model for average densities
+  y_ga <- rowMeans(dplyr::select(ga_data, all_of(tcas_tmp)), na.rm = TRUE) |>
+    scale()
+  ols_ga <- lm(y_ga ~ years)
+  m_ga <- c(m_ga, unname(ols_ga$coefficients[2]))
+  b_ga <- c(b_ga, unname(ols_ga$coefficients[1]))
+  
+  # Fit raven model
+  y_cc <- cc_data[ru] |>
+    unlist() |>
+    unname() |>
+    scale()
+  ols_cc <- lm(y_cc ~ years)
+  m_cc <- c(m_cc, unname(ols_cc$coefficients[2]))
+  b_cc <- c(b_cc, unname(ols_cc$coefficients[1]))
+  
+  # Visualize
+  df <- data.frame(
+    years = years,
+    ravens = y_cc,
+    raven_fit = ols_cc$coefficients[2] * years + ols_cc$coefficients[1],
+    tortoises = y_ga,
+    tortoise_fit = ols_ga$coefficients[2] * years + ols_ga$coefficients[1]
+  )
+  plot_colors <- c("C. corax" = "red", "G. agassizii" = "blue")
+  plot <- ggplot(data = na.omit(df), aes(x = years)) +
+    geom_point(aes(y = ravens, color = "C. corax"), shape = 15) +
+    geom_line(aes(y = raven_fit), color = "red") +
+    geom_point(aes(y = tortoises, color = "G. agassizii")) +
+    geom_line(aes(y = tortoise_fit), color = "blue") +
+    scale_color_manual(values = plot_colors, name = "species") +
+    ylab("scaled presence variable") +
+    ggtitle(paste0(
+      "Average tortoise density and raven occupancy probability for ",
+      ru
+    )) +
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid = element_line(color = "grey")
+    )
+  ggsave(paste0("./plots/", ru, "_fit.png"))
+  
+}
+
+# Add data to results
+res <- dplyr::mutate(
+  res,
+  SlopeTortoise = m_ga,
+  InterceptTortoise = b_ga,
+  SlopeRaven = m_cc,
+  InterceptRaven = b_cc,
+  TxR = m_ga * m_cc
+)
+write.csv(res, "./results/fitTortoiseRaven.csv", row.names = FALSE)
