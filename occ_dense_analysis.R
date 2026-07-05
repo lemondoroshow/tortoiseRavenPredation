@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(nlme)
 library(terra)
+library(tmap)
 
 #### Tortoises ####
 
@@ -446,7 +447,7 @@ for (ru in colnames(ru_data_cc)[-1]) {
   
 }
 
-#### Tortoises and ravens ####
+#### Tortoises and ravens -- RU level ####
 
 # Import data
 ga_data <- read.csv("./data/tortoise_densities.csv")
@@ -531,3 +532,56 @@ res <- dplyr::mutate(
   TxR = m_ga * m_cc
 )
 write.csv(res, "./results/fitTortoiseRaven.csv", row.names = FALSE)
+
+#### Tortoises and ravens -- TCA level ####
+
+# Import data
+tcas <- vect("./data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
+  project("WGS84")
+ga_data <- read.csv("./data/tortoise_densities.csv")
+cc_data <- read.csv("./data/raven_psi_tca.csv")
+years <- 1:24
+
+# Iterate through TCAs
+res <- c()
+for (tca in colnames(ga_data[-1])) {
+  
+  # Fit tortoise model
+  y_ga <- ga_data[tca] |>
+    unlist() |>
+    unname()
+  ols_ga <- lm(y_ga ~ years)
+  m_ga <- unname(ols_ga$coefficients[2])
+  
+  # Fit raven model
+  y_cc <- cc_data[tca] |>
+    unlist() |>
+    unname()
+  ols_cc <- lm(y_cc ~ years)
+  m_cc <- unname(ols_cc$coefficients[2])
+  
+  # Add metrics to results
+  res <- c(res, m_ga * m_cc) |>
+    unlist()
+}
+
+# Format, scale data
+df <- data.frame(matrix(nrow = length(colnames(ga_data)[-1])))
+df$stratum <- colnames(ga_data)[-1]
+df$res <- scale(res)
+df <- dplyr::select(df, c(stratum, res))
+tcas_new <- left_join(tcas, df, by = c("stratum"))
+tcas_new$res <- as.numeric(tcas_new$res)
+
+# Visualize
+map <- tm_shape(tcas_new) +
+  tm_polygons(
+    fill = "res", 
+    fill.scale = tm_scale(values = "-tableau.classic_blue"),
+    fill.legend = tm_legend(title = "TxR slopes")) +
+  tm_basemap("Esri.WorldImagery") +
+  tm_title(
+    "Scaled tortoise times raven slopes for OLS fits of annual presence",
+    size = 1
+  )
+tmap_save(map, "./plots/txr_tca.png")
