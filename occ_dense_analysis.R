@@ -279,8 +279,8 @@ gls_nm_res <- data.frame(
 )
 
 # Plot fits
-nm_fit_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", "BD" = "#bc5090", 
-                   ".OLS Fit" = "#994F00", ".GLS Fit" = "#006CD1")
+nm_fit_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+                   "BD" = "#bc5090", ".GLS Fit" = "#006CD1")
 nm_fit_plot <- ggplot(df, aes(x = year)) +
   geom_point(aes(y = CS, color = "CS"), shape = 16) +
   geom_point(aes(y = MM, color = "MM"), shape = 17) +
@@ -626,7 +626,7 @@ for (ru in rus_list) {
   }
   
   # Add dummy variables and create formula
-  df_tmp <- group_by(df_tmp,time) |>
+  df_tmp <- group_by(df_tmp, time) |>
     arrange(.by_group = TRUE) |>
     dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
     dplyr::select(-c("stratum"))
@@ -635,4 +635,31 @@ for (ru in rus_list) {
   
   # Fit model
   gls_fit <- gls(fmla, data = df_tmp, na.action = na.omit)
+  coef <- gls_fit$coefficients
+  
+  # Extract fit for pop-avg
+  gls_res <- data.frame(
+    year = years,
+    y = coef[1] + # Intercept
+        coef[2] * years + # Linear in regards to time
+        coef[3] * 1 / 4 + # First stratum (average)
+        coef[4] * 1 / 4 + # Second stratum (average)
+        coef[5] * 1 / 4   # Third stratum (average)
+  )
+  
+  nm_fit_colors <- c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+                     "BD" = "#bc5090", ".GLS Fit" = "#006CD1")
+  nm_fit_plot <- ggplot(df, aes(x = years)) +
+    geom_point(aes(y = CS, color = "CS")) +
+    geom_point(aes(y = MM, color = "MM")) +
+    geom_point(aes(y = GB, color = "GB")) +
+    geom_point(aes(y = BD, color = "BD")) +
+    geom_line(aes(y = y, color = ".GLS Fit"), data = gls_res) +
+    scale_color_manual(values = nm_fit_colors, name  = "TCA") +
+    theme(panel.background = element_rect(fill = "white"),
+          panel.grid.major = element_line(color = "grey"),
+          panel.grid.minor = element_line(color = "grey")) +
+    xlab("Year") +
+    ylab("Density (tortoises / km-sqared)") + 
+    ggtitle("Northeastern Mojave tortoise densities")
 }
