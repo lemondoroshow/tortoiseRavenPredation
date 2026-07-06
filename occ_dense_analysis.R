@@ -602,6 +602,18 @@ tcas_list <- list(
 )
 rus_list <- names(tcas_list)
 
+# Set colors for plots
+fit_colors <- list(
+  "WesternMojave" = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600",
+                      "GLS" = "#006CD1"),
+  "ColoradoDesert" = c("PV" = "#003f5c", "FE" = "#374c80", "CM" = "#7a5195", 
+                       "PT" = "#bc5090", "JT" = "#ef5675", "CK" = "#ff764a", 
+                       "AG" = "#ffa600", "GLS" = "#006CD1"),
+  "EasternMojave" = c("EV" = "#003f5c", "IV" = "#bc5090", "GLS" = "#006CD1"),
+  "NortheasternMojave" = c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+                           "BD" = "#bc5090", "GLS" = "#006CD1") 
+)
+
 # Iterate through RUs
 res <- data.frame(year = years)
 for (ru in rus_list) {
@@ -630,8 +642,8 @@ for (ru in rus_list) {
   df_tmp <- group_by(df_tmp, time) |>
     arrange(.by_group = TRUE) |>
     dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
-    dplyr::select(-c("stratum")) |>
-    mutate(y = scale(y))
+    dplyr::select(-c("stratum")) # |>
+  # dplyr::mutate(y = scale(y)) # Uncomment this line when calc. results
   # Remove [-2] to include curvilinear time relationship
   fmla <- reformulate(colnames(df_tmp)[-1][-2], response = "y") 
   
@@ -645,11 +657,32 @@ for (ru in rus_list) {
     y <- y + coef[i] * 1 / (length(coef) - 1)
   }
   gls_res <- data.frame(
-    year = years,
+    year = 2001:2024,
     y = y
   )
   res[ru] <- gls_res$y
+  
+  # Plot results
+  colors <- fit_colors[ru] |>
+    unname() |>
+    unlist()
+  plot <- ggplot(df, aes(x = year))
+  points_list <- lapply(tcas_tmp, function(tca) {
+    geom_point(data = df, aes(y = .data[[tca]], color = tca))
+  })
+  plot <- plot +
+    points_list +
+    geom_line(aes(y = y, color = "GLS"), data = gls_res) +
+    scale_color_manual(values = colors, name  = "TCA") +
+    theme(
+      panel.background = element_rect(fill = "white"), 
+      panel.grid = element_line(color = "grey")
+    ) +
+    xlab("Year") +
+    ylab("Density (tortoises / km-sqared)") + 
+    ggtitle(paste0(ru, " tortoise densities, GLS fit"))
+  ggsave(paste0("./plots/", ru, "_GLS_tortoise.png"))
 }
 
-# Export fits
-write.csv(res, "./results/gls_tortoise_fits.csv")
+# Export fits # Do not export without uncommenting lines 645 and 646
+# write.csv(res, "./results/gls_tortoise_fits.csv")
