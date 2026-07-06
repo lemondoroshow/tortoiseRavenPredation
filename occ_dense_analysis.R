@@ -630,7 +630,8 @@ for (ru in rus_list) {
   df_tmp <- group_by(df_tmp, time) |>
     arrange(.by_group = TRUE) |>
     dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
-    dplyr::select(-c("stratum"))
+    dplyr::select(-c("stratum")) |>
+    mutate(y = scale(y))
   # Remove [-2] to include curvilinear time relationship
   fmla <- reformulate(colnames(df_tmp)[-1][-2], response = "y") 
   
