@@ -1,5 +1,6 @@
 rm(list = ls())
 library(dplyr)
+library(fastDummies)
 library(ggplot2)
 library(nlme)
 library(terra)
@@ -585,3 +586,53 @@ map <- tm_shape(tcas_new) +
     size = 1
   )
 tmap_save(map, "./plots/txr_tca.png")
+
+#### Tortoises -- RU level, GLS ####
+
+# Import tortoise data
+df <- read.csv("./data/tortoise_densities.csv")
+years <- 1:24
+
+# Set up variables
+tcas_list <- list(
+  "WesternMojave" = c("FK", "SC", "OR"),
+  "ColoradoDesert" = c("PV", "FE", "CM", "PT", "JT", "CK", "AG"),
+  "EasternMojave" = c("EV", "IV"),
+  "NortheasternMojave" = c("CS", "MM", "GB", "BD")
+)
+rus_list <- names(tcas_list)
+
+# Iterate through RUs
+for (ru in rus_list) {
+  
+  # Prepare GLS dataframe
+  tcas_tmp <- tcas_list[ru] |>
+    unlist() |>
+    unname()
+  df_tmp <- data.frame(matrix(ncol = 4, nrow = 0))
+  colnames(df_tmp) <- c("y", "time", "time.2", "stratum")
+  for (tca in tcas_tmp) {
+    df_tmp <- rbind(
+      df_tmp,
+      data.frame(
+        y = df[tca] |>
+          unlist() |>
+          unname(),
+        time = years,
+        time.2 = years ^ 2,
+        stratum = tca
+      )
+    )
+  }
+  
+  # Add dummy variables and create formula
+  df_tmp <- group_by(df_tmp,time) |>
+    arrange(.by_group = TRUE) |>
+    dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
+    dplyr::select(-c("stratum"))
+  # Remove [-2] to include curvilinear time relationship
+  fmla <- reformulate(colnames(df_tmp)[-1][-2], response = "y") 
+  
+  # Fit model
+  gls_fit <- gls(fmla, data = df_tmp, na.action = na.omit)
+}
