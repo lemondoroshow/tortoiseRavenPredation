@@ -174,6 +174,22 @@ b_ga <- c()
 m_cc <- c()
 b_cc <- c()
 
+# Set colors for plots
+fit_colors <- list(
+  "WesternMojave" = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600",
+                      "tortoise trend" = "#006CD1", "raven trend" = "#994F00", 
+                      "ravens" = "red"),
+  "ColoradoDesert" = c("PV" = "#003f5c", "FE" = "#374c80", "CM" = "#7a5195", 
+                       "PT" = "#bc5090", "JT" = "#ef5675", "CK" = "#ff764a", 
+                       "AG" = "#ffa600", "tortoise trend" = "#006CD1", 
+                       "raven trend" = "#994F00", "ravens" = "red"),
+  "EasternMojave" = c("EV" = "#003f5c", "IV" = "#bc5090", "GLS" = "#006CD1", 
+                      "raven trend" = "#994F00", "ravens" = "red"),
+  "NortheasternMojave" = c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+                           "BD" = "#bc5090", "tortoise trend" = "#006CD1",
+                           "raven trend" = "#994F00", "ravens" = "red") 
+)
+
 # Iterate through RUs
 res <- data.frame(
   ru = rus_list
@@ -185,12 +201,48 @@ for (ru in rus_list) {
     unlist() |>
     unname()
   
-  # Fit tortoise model for average densities
-  y_ga <- rowMeans(dplyr::select(ga_data, all_of(tcas_tmp)), na.rm = TRUE) |>
-    scale()
-  ols_ga <- lm(y_ga ~ years)
-  m_ga <- c(m_ga, unname(ols_ga$coefficients[2]))
-  b_ga <- c(b_ga, unname(ols_ga$coefficients[1]))
+  # Prepare GLS dataframe
+  df_tmp <- data.frame(matrix(ncol = 4, nrow = 0))
+  colnames(df_tmp) <- c("y", "time", "time.2", "stratum")
+  for (tca in tcas_tmp) {
+    df_tmp <- rbind(
+      df_tmp,
+      data.frame(
+        y = ga_data[tca] |>
+          unlist() |>
+          unname() |>
+          scale(),
+        time = years,
+        time.2 = years ^ 2,
+        stratum = tca
+      )
+    )
+  }
+  
+  # Add dummy variables and create formula
+  df_tmp <- group_by(df_tmp, time) |>
+    arrange(.by_group = TRUE) |>
+    dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
+    dplyr::select(-c("stratum"))
+  # Remove [-2] to include curvilinear time relationship
+  fmla <- reformulate(colnames(df_tmp)[-1][-2], response = "y") 
+  
+  # Fit model
+  gls_fit <- gls(fmla, data = df_tmp, na.action = na.omit)
+  coef <- gls_fit$coefficients
+  b_ga <- c(b_ga, unname(coef[1]))
+  
+  # Extract fit for pop-avg
+  y <- coef[1] + coef[2] * years
+  for (i in 3:length(coef)) {
+    y <- y + coef[i] * 1 / (length(coef) - 1)
+  }
+  
+  # Add slope to list from fit
+  m_ga <- c(
+    m_ga,
+    (y[length(y)] - y[1]) / (length(years) - 1)
+  )
   
   # Fit raven model
   y_cc <- cc_data[ru] |>
@@ -201,21 +253,27 @@ for (ru in rus_list) {
   m_cc <- c(m_cc, unname(ols_cc$coefficients[2]))
   b_cc <- c(b_cc, unname(ols_cc$coefficients[1]))
   
-  # Visualize
+  # Create visualization data frames
   df <- data.frame(
-    years = years,
+    year = years + 2000,
     ravens = y_cc,
     raven_fit = ols_cc$coefficients[2] * years + ols_cc$coefficients[1],
-    tortoises = y_ga,
-    tortoise_fit = ols_ga$coefficients[2] * years + ols_ga$coefficients[1]
+    tortoise_fit = y
   )
-  plot_colors <- c("C. corax" = "red", "G. agassizii" = "blue")
-  plot <- ggplot(data = na.omit(df), aes(x = years)) +
-    geom_point(aes(y = ravens, color = "C. corax"), shape = 15) +
-    geom_line(aes(y = raven_fit), color = "red") +
-    geom_point(aes(y = tortoises, color = "G. agassizii")) +
-    geom_line(aes(y = tortoise_fit), color = "blue") +
-    scale_color_manual(values = plot_colors, name = "species") +
+
+  # Plot data and fits
+  colors <- fit_colors[ru] |>
+    unname() |>
+    unlist()
+  points_list <- lapply(tcas_tmp, function(tca) {
+    geom_point(data = ga_data, aes(y = scale(.data[[tca]]), color = tca))
+  })
+  plot <- ggplot(data = na.omit(df), aes(x = year)) + 
+    points_list +
+    geom_point(aes(y = ravens, color = "ravens"), shape = 15, size = 3) +
+    geom_line(aes(y = raven_fit, color = "raven trend")) +
+    geom_line(aes(y = tortoise_fit, color = "tortoise trend")) +
+    scale_color_manual(values = colors, name = "variable") +
     ylab("scaled presence variable") +
     ggtitle(paste0(
       "Average tortoise density and raven occupancy probability for ",
@@ -238,7 +296,7 @@ res <- dplyr::mutate(
   InterceptRaven = b_cc,
   TxR = m_ga * m_cc
 )
-write.csv(res, "./results/fitTortoiseRaven.csv", row.names = FALSE)
+write.csv(res, "./results/fit_tortoise_raven.csv", row.names = FALSE)
 
 #### Tortoises and ravens -- TCA level ####
 
