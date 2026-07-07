@@ -394,7 +394,8 @@ for (ru in rus_list) {
       data.frame(
         y = df[tca] |>
           unlist() |>
-          unname(),
+          unname() #|>
+          #scale(), # Uncomment these lines when calculating results
         time = years,
         time.2 = years ^ 2,
         stratum = tca
@@ -406,8 +407,7 @@ for (ru in rus_list) {
   df_tmp <- group_by(df_tmp, time) |>
     arrange(.by_group = TRUE) |>
     dummy_cols(select_columns = "stratum", remove_first_dummy = TRUE) |>
-    dplyr::select(-c("stratum")) # |>
-  # dplyr::mutate(y = scale(y)) # Uncomment this line when calc. results
+    dplyr::select(-c("stratum"))
   # Remove [-2] to include curvilinear time relationship
   fmla <- reformulate(colnames(df_tmp)[-1][-2], response = "y") 
   
@@ -448,5 +448,6 @@ for (ru in rus_list) {
   ggsave(paste0("./plots/", ru, "_GLS_tortoise.png"))
 }
 
-# Export fits # Do not export without uncommenting lines 352 and 353
+# Export fits # Do not export without uncommenting lines 397 and 398
+# May need to be fixed as of 07/07/2026
 # write.csv(res, "./results/gls_tortoise_fits.csv")
