@@ -183,8 +183,9 @@ fit_colors <- list(
                        "PT" = "#bc5090", "JT" = "#ef5675", "CK" = "#ff764a", 
                        "AG" = "#ffa600", "tortoise trend" = "#006CD1", 
                        "raven trend" = "#994F00", "ravens" = "red"),
-  "EasternMojave" = c("EV" = "#003f5c", "IV" = "#bc5090", "GLS" = "#006CD1", 
-                      "raven trend" = "#994F00", "ravens" = "red"),
+  "EasternMojave" = c("EV" = "#003f5c", "IV" = "#bc5090", 
+                      "tortoise trend" = "#006CD1", "raven trend" = "#994F00", 
+                      "ravens" = "red"),
   "NortheasternMojave" = c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
                            "BD" = "#bc5090", "tortoise trend" = "#006CD1",
                            "raven trend" = "#994F00", "ravens" = "red") 
