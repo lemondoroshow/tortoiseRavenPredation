@@ -174,10 +174,10 @@ rus_list <- names(tcas_list)
 fit_colors <- list(
   "Western_Mojave" = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600"),
   "Colorado_Desert" = c("PV" = "#003f5c", "FE" = "#374c80", "CM" = "#7a5195", 
-                        "PT" = "#bc5090", "JT" = "ef5675#", "CK" = "#ff764a", 
+                        "PT" = "#bc5090", "JT" = "#ef5675", "CK" = "#ff764a", 
                         "AG" = "#ffa600"),
   "Eastern_Mojave" = c("EV" = "#003f5c", "IV" = "#bc5090"),
-  "Northeastern_Mojave" = c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+  "Northeastern_Mojave" = c("CS" = "#ef5675", "MM" = "#374c80", "GB" = "#7a5195", 
                             "BD" = "#bc5090") 
 )
 
