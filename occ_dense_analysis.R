@@ -3,6 +3,7 @@ library(dplyr)
 library(fastDummies)
 library(ggplot2)
 library(nlme)
+library(stringr)
 library(terra)
 library(tmap)
 
@@ -151,6 +152,68 @@ for (ru in colnames(ru_data_cc)[-1]) {
   
   # Save plot
   ggsave(paste0("./plots/ruRaven/", ru, ".png"))
+  
+}
+
+#### Tortoises -- raw visualization ####
+
+# Import data
+ga_data <- read.csv("./data/tortoise_densities.csv")
+years <- 1:24
+
+# Set up variables
+tcas_list <- list(
+  "Western_Mojave" = c("FK", "SC", "OR"),
+  "Colorado_Desert" = c("PV", "FE", "CM", "PT", "JT", "CK", "AG"),
+  "Eastern_Mojave" = c("EV", "IV"),
+  "Northeastern_Mojave" = c("CS", "MM", "GB", "BD")
+)
+rus_list <- names(tcas_list)
+
+# Set colors for plots
+fit_colors <- list(
+  "Western_Mojave" = c("FK" = "#003f5c", "SC" = "#bc5090", "OR" = "#ffa600"),
+  "Colorado_Desert" = c("PV" = "#003f5c", "FE" = "#374c80", "CM" = "#7a5195", 
+                        "PT" = "#bc5090", "JT" = "ef5675#", "CK" = "#ff764a", 
+                        "AG" = "#ffa600"),
+  "Eastern_Mojave" = c("EV" = "#003f5c", "IV" = "#bc5090"),
+  "Northeastern_Mojave" = c("CS" = "#003f5c", "MM" = "#374c80", "GB" = "#7a5195", 
+                            "BD" = "#bc5090") 
+)
+
+# Iterate through RUs
+for (ru in rus_list) {
+  
+  # Get TCAs of interest
+  tcas_tmp <- tcas_list[ru] |>
+    unlist() |>
+    unname()
+  
+  # Plot data and fits
+  colors <- fit_colors[ru] |>
+    unname() |>
+    unlist()
+  points_list <- lapply(tcas_tmp, function(tca) {
+    geom_point(data = ga_data, aes(y = .data[[tca]], color = tca))
+  })
+  lines_list <- lapply(tcas_tmp, function(tca) {
+    geom_line(data = dplyr::select(ga_data, c("year", !!tca)) |>
+                na.omit(), aes(y = .data[[tca]], color = tca), na.rm = T)
+  })
+  plot <- ggplot(data = data.frame(years = years + 2000), aes(x = year)) + 
+    points_list +
+    lines_list + 
+    scale_color_manual(values = colors, name = "TCA") +
+    ylab("tortoises / km²") +
+    ggtitle(paste0(
+      "Annual tortoise densities per USFWS for ",
+      str_replace(ru, "_", " ")
+    )) +
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid = element_line(color = "grey")
+    )
+  ggsave(paste0("./finalPlots/", ru, "_tortoise_densities.png"))
   
 }
 
