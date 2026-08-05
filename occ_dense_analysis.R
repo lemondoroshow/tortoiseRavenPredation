@@ -648,7 +648,7 @@ for (ru in rus_list) {
       panel.background = element_rect(fill = "white"),
       panel.grid = element_line(color = "grey")
     )
-  ggsave(paste0("./finalPlots/ga_", ru, "_fit.png"), width = 8, height = 6,
+  ggsave(paste0("./finalPlots/ga_", ru, "_fit.png"), width = 10, height = 6,
          unit = "in")
   
 }
@@ -730,7 +730,7 @@ for (ru in rus_list) {
       panel.background = element_rect(fill = "white"),
       panel.grid = element_line(color = "grey")
     )
-  ggsave(paste0("./finalPlots/cc_", ru, "_fit.png"), width = 8, height = 6,
+  ggsave(paste0("./finalPlots/cc_", ru, "_fit.png"), width = 10, height = 6,
          unit = "in")
   
 }
