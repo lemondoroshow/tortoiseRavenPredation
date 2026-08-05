@@ -643,6 +643,83 @@ for (ru in rus_list) {
       panel.background = element_rect(fill = "white"),
       panel.grid = element_line(color = "grey")
     )
-  ggsave(paste0("./finalPlots/", ru, "_fit.png"))
+  ggsave(paste0("./finalPlots/ga_", ru, "_fit.png"))
+  
+}
+
+#### Ravens -- final ####
+
+# Import data
+cc_data <- read.csv("./data/raven_psi_ru.csv")
+years <- 1:24
+
+# Set up variables
+tcas_list <- list(
+  "Western_Mojave" = c("FK", "SC", "OR"),
+  "Colorado_Desert" = c("PV", "FE", "CM", "PT", "JT", "CK", "AG"),
+  "Eastern_Mojave" = c("EV", "IV"),
+  "Northeastern_Mojave" = c("CS", "MM", "GB", "BD")
+)
+rus_list <- names(tcas_list)
+m_cc <- c()
+b_cc <- c()
+
+# Set colors for plots
+fit_colors <- c("raven trend" = "#994F00", "ravens" = "red")
+
+# Set coordinates for labels
+label_loc <- list(
+  "Western_Mojave" = list(x = 2012, y = 0.5),
+  "Colorado_Desert" = list(x = 2017, y = 0.275),
+  "Eastern_Mojave" = list(x = 2015, y = 0.375),
+  "Northeastern_Mojave" = list(x = 2017.5, y = 0.32)
+)
+
+# Iterate through RUs
+res <- data.frame(
+  ru = rus_list
+)
+for (ru in rus_list) {
+  
+  # Fit raven model
+  y_cc <- cc_data[ru] |>
+    unlist() |>
+    unname()
+  ols_cc <- lm(y_cc ~ years)
+  m_cc <- c(m_cc, unname(ols_cc$coefficients[2]))
+  b_cc <- c(b_cc, unname(ols_cc$coefficients[1]))
+  
+  # Create visualization data frames
+  df <- data.frame(
+    year = years + 2000,
+    ravens = y_cc,
+    raven_fit = ols_cc$coefficients[2] * years + ols_cc$coefficients[1]
+  )
+  
+  # Plot fit
+  res_err <- summary(ols_cc)$sigma
+  x = label_loc[[ru]]$x
+  y = label_loc[[ru]]$y
+  plot <- ggplot(data = na.omit(df), aes(x = year)) + 
+    geom_point(aes(y = ravens, color = "ravens"), shape = 15, size = 3) +
+    geom_line(aes(y = raven_fit, color = "raven trend")) +
+    annotate("label", x = x, y = y,
+             label = paste0(
+               "res std err = ", round(res_err, 2), "\n",
+               "intercept = ", round(ols_cc$coefficients[1], 2), "\n",
+               "slope = ", round(ols_cc$coefficients[2], 4)
+             )
+    ) +
+    scale_color_manual(values = fit_colors, name = "variable") +
+    ylab("average probability of raven occupancy") +
+    ggtitle(paste0(
+      "Raven occupancy probabilities and OLS fit for ",
+      str_replace(ru, "_", " ")
+    )) +
+    theme(
+      panel.background = element_rect(fill = "white"),
+      panel.grid = element_line(color = "grey")
+    )
+  ggsave(paste0("./finalPlots/cc_", ru, "_fit.png"))
   
 }
