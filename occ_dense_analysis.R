@@ -516,7 +516,7 @@ for (ru in rus_list) {
 # May need to be fixed as of 07/07/2026
 # write.csv(res, "./results/gls_tortoise_fits.csv")
 
-#### Tortoises -- final ####
+#### 1. Tortoises -- final ####
 
 # Import data
 ga_data <- read.csv("./data/tortoise_densities.csv")
@@ -558,6 +558,12 @@ label_loc <- list(
 res <- data.frame(
   ru = rus_list
 )
+slopes_ga <- list()
+length(slopes_ga) <- 4
+names(slopes_ga) <- names(tcas_list)
+int_ga <- list()
+length(int_ga) <- 4
+names(int_ga) <- names(tcas_list)
 for (ru in rus_list) {
   
   # Get TCAs of interest
@@ -593,7 +599,6 @@ for (ru in rus_list) {
   # Fit model
   gls_fit <- gls(fmla, data = df_tmp, na.action = na.omit)
   coef <- gls_fit$coefficients
-  b_ga <- c(b_ga, unname(coef[1]))
   
   # Extract fit for pop-avg
   y <- coef[1] + coef[2] * years
@@ -602,10 +607,10 @@ for (ru in rus_list) {
   }
   
   # Add slope to list from fit
-  m_ga <- c(
-    m_ga,
-    (y[length(y)] - y[1]) / (length(years) - 1)
-  )
+  m_ga <- (y[length(y)] - y[1]) / (length(years) - 1)
+  b_ga <- y[1] - m_ga
+  slopes_ga[[ru]] <- m_ga
+  int_ga[[ru]] <- b_ga
   
   # Create visualization data frames
   df <- data.frame(
@@ -629,7 +634,7 @@ for (ru in rus_list) {
     annotate("label", x = x, y = y,
               label = paste0(
                 "res std err = ", round(res_err, 2), "\n",
-                "intercept = ", round(b_ga, 2), "\n",
+                "intercept (2000) = ", round(b_ga, 2), "\n",
                 "slope = ", round(m_ga, 2)
               )
     ) +
@@ -643,11 +648,12 @@ for (ru in rus_list) {
       panel.background = element_rect(fill = "white"),
       panel.grid = element_line(color = "grey")
     )
-  ggsave(paste0("./finalPlots/ga_", ru, "_fit.png"))
+  ggsave(paste0("./finalPlots/ga_", ru, "_fit.png"), width = 8, height = 6,
+         unit = "in")
   
 }
 
-#### Ravens -- final ####
+#### 2. Ravens -- final ####
 
 # Import data
 cc_data <- read.csv("./data/raven_psi_ru.csv")
@@ -661,8 +667,6 @@ tcas_list <- list(
   "Northeastern_Mojave" = c("CS", "MM", "GB", "BD")
 )
 rus_list <- names(tcas_list)
-m_cc <- c()
-b_cc <- c()
 
 # Set colors for plots
 fit_colors <- c("raven trend" = "#994F00", "ravens" = "red")
@@ -679,6 +683,12 @@ label_loc <- list(
 res <- data.frame(
   ru = rus_list
 )
+slopes_cc <- list()
+length(slopes_cc) <- 4
+names(slopes_cc) <- names(tcas_list)
+int_cc <- list()
+length(int_cc) <- 4
+names(int_cc) <- names(tcas_list)
 for (ru in rus_list) {
   
   # Fit raven model
@@ -686,8 +696,8 @@ for (ru in rus_list) {
     unlist() |>
     unname()
   ols_cc <- lm(y_cc ~ years)
-  m_cc <- c(m_cc, unname(ols_cc$coefficients[2]))
-  b_cc <- c(b_cc, unname(ols_cc$coefficients[1]))
+  slopes_cc[[ru]] <- unname(ols_cc$coefficients[2])
+  int_cc[[ru]] <- unname(ols_cc$coefficients[1])
   
   # Create visualization data frames
   df <- data.frame(
@@ -706,7 +716,7 @@ for (ru in rus_list) {
     annotate("label", x = x, y = y,
              label = paste0(
                "res std err = ", round(res_err, 2), "\n",
-               "intercept = ", round(ols_cc$coefficients[1], 2), "\n",
+               "intercept (2000) = ", round(ols_cc$coefficients[1], 2), "\n",
                "slope = ", round(ols_cc$coefficients[2], 4)
              )
     ) +
@@ -720,6 +730,12 @@ for (ru in rus_list) {
       panel.background = element_rect(fill = "white"),
       panel.grid = element_line(color = "grey")
     )
-  ggsave(paste0("./finalPlots/cc_", ru, "_fit.png"))
+  ggsave(paste0("./finalPlots/cc_", ru, "_fit.png"), width = 8, height = 6,
+         unit = "in")
   
 }
+
+#### 3. Slope comparison -- final (run 1. and 2. above first) ####
+
+# Clean up
+rm(list = setdiff(ls(), c("int_cc", "int_ga", "slopes_cc", "slopes_ga")))
