@@ -5,6 +5,7 @@ library(ggplot2)
 library(nlme)
 library(stringr)
 library(terra)
+library(tidyterra)
 library(tmap)
 
 #### Curvilinear GLS for tortoises ####
@@ -131,3 +132,32 @@ for (ru in rus_list) {
          unit = "in")
   
 }
+
+#### Cell-level OLS for ravens ####
+
+# Define OLS slope retrieval function
+# Must account for NAs in raster
+getSlope <- function(y, x) {
+  if (!all(is.na(y)) & !all(is.na(x))) {
+    ols_fit <- lm(y ~ x)
+    return(unname(ols_fit$coefficients[2]))
+  } else {
+    return(NA)
+  }
+}
+
+# Import all results
+res_folder <- "./results/el+nd+im+ro+to+la+imXro+imXla+toXro"
+files <- list.files(res_folder)
+rasts <- c()
+for (file in files) {
+  rasts <- c(rasts, rast(paste0(res_folder, "/", file)))
+}
+
+# Apply OLS to each cell
+years <- c(1:24)[-20]
+res <- sds(rasts) |>
+  terra::app(getSlope, years)
+
+## TODO: Add NA layer in for 2020 to make sure slopes are consistent 
+## (Removing 2020 alone does not suffice)
