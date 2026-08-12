@@ -151,21 +151,10 @@ res_folder <- "./results/el+nd+im+ro+to+la+imXro+imXla+toXro"
 files <- list.files(res_folder)
 rasts <- c()
 for (file in files) {
-  year <- substr(file, 1, 4)
-  if (year == 2020) {
-    # Easy way to make an all-NA raster with same res, ext, crs
-    na_rast <- deepcopy(rasts[[1]])
-    na_rast[na_rast >= 0] <- NA 
-    rasts <- c(rasts, na_rast)
-  } else {
-    rasts <- c(rasts, rast(paste0(res_folder, "/", file)))
-  }
+  rasts <- c(rasts, rast(paste0(res_folder, "/", file)))
 }
 
 # Apply OLS to each cell
-years <- c(1:24)
+years <- c(1:24)[-20]
 res <- sds(rasts) |>
   terra::app(getSlope, years)
-
-## TODO: Add NA layer in for 2020 to make sure slopes are consistent 
-## (Removing 2020 alone does not suffice)
