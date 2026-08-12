@@ -158,3 +158,21 @@ for (file in files) {
 years <- c(1:24)[-20]
 res <- sds(rasts) |>
   terra::app(getSlope, years)
+
+# Map results
+tcas <- vect("data/shapefiles/TCA/USFWS_DesertTortoise_TCAs.shp") |>
+  project(res)
+rus <- vect("data/shapefiles/RU/2011RecoveryUnits.shp") |>
+  project(res)
+map <- tm_shape(res) + 
+  tm_raster(
+    "psi",
+    col.legend = tm_legend("change in psi / year")
+  ) +
+  tm_basemap("Esri.WorldImagery") + 
+  tm_shape(tcas) +
+  tm_lines() +
+  tm_shape(rus) +
+  tm_lines() +
+  tm_title("OLS slopes (psi / year) for raven occupancies, 2001-2024")
+tmap_save(map, "./plots/cell_level_ols_cc.png")
